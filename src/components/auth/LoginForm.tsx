@@ -4,8 +4,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
+import { FcGoogle } from "react-icons/fc";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -13,34 +16,30 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login - Replace with actual Firebase implementation
     try {
-      // Add Firebase authentication here
-      console.log("Logging in with:", email, password);
-      
-      // Simulate successful login
-      setTimeout(() => {
-        toast({
-          title: "Success!",
-          description: "You have successfully logged in.",
-        });
-        navigate("/dashboard");
-        setIsLoading(false);
-      }, 1000);
-      
+      await signIn(email, password);
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
-      });
+      // Error is already handled in the auth context
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Note: Redirect will be handled by the OAuth provider
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      // Error is already handled in the auth context
     }
   };
 
@@ -83,6 +82,25 @@ const LoginForm = () => {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Signing in..." : "Sign in"}
         </Button>
+        
+        <div className="relative my-4">
+          <Separator />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-background px-2 text-xs text-muted-foreground">
+              OR CONTINUE WITH
+            </span>
+          </div>
+        </div>
+        
+        <Button 
+          type="button"
+          variant="outline" 
+          className="w-full" 
+          onClick={handleGoogleSignIn}
+        >
+          <FcGoogle className="mr-2 h-4 w-4" /> Sign in with Google
+        </Button>
+        
         <div className="text-center text-sm mt-4">
           Don't have an account?{" "}
           <Link to="/register" className="text-primary font-medium hover:underline">

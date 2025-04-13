@@ -4,10 +4,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 // Pages
-import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -20,7 +20,39 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+// Protected route component
+const ProtectedRoute = () => {
+  const { user, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    // You could add a loading spinner here
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
+};
+
+// Public route component that redirects to dashboard if user is authenticated
+const PublicRoute = () => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Outlet />;
+};
+
+const AppContent = () => {
   // Add meta viewport tag for better mobile rendering
   useEffect(() => {
     // Check if the meta viewport tag exists
@@ -55,29 +87,48 @@ const App = () => {
   }, []);
 
   return (
+    <Routes>
+      {/* Redirect root to login */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      
+      {/* Public routes */}
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Route>
+      
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/wallets" element={<Wallets />} />
+        <Route path="/expenses" element={<Expenses />} />
+        <Route path="/transactions" element={<Transactions />} />
+        <Route path="/analysis" element={<Analysis />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
+      
+      {/* Redirect to dashboard if user tries to access these routes directly */}
+      <Route path="/expenses/new" element={<Navigate to="/expenses" replace />} />
+      <Route path="/wallets/transfer" element={<Navigate to="/wallets" replace />} />
+      
+      {/* 404 route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/wallets" element={<Wallets />} />
-            <Route path="/expenses" element={<Expenses />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/analysis" element={<Analysis />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* Redirect to dashboard if user tries to access /expenses/new directly */}
-            <Route path="/expenses/new" element={<Navigate to="/expenses" replace />} />
-            {/* Redirect to wallets if user tries to access /wallets/transfer directly */}
-            <Route path="/wallets/transfer" element={<Navigate to="/wallets" replace />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

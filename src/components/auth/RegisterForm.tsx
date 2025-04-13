@@ -4,44 +4,44 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
+import { FcGoogle } from "react-icons/fc";
 
 const RegisterForm = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate registration - Replace with actual Firebase implementation
     try {
-      // Add Firebase registration here
-      console.log("Registering with:", name, email, password);
-      
-      // Simulate successful registration
-      setTimeout(() => {
-        toast({
-          title: "Account created!",
-          description: "You have successfully registered.",
-        });
-        navigate("/dashboard");
-        setIsLoading(false);
-      }, 1000);
-      
+      await signUp(email, password, firstName, lastName);
+      navigate("/dashboard");
     } catch (error) {
       console.error("Registration error:", error);
-      toast({
-        variant: "destructive",
-        title: "Registration failed",
-        description: "Please try again with different credentials.",
-      });
+      // Error is already handled in the auth context
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Redirect will be handled by the OAuth provider
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      // Error is already handled in the auth context
     }
   };
 
@@ -51,15 +51,26 @@ const RegisterForm = () => {
       subtitle="Register to start tracking your expenses"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            id="name"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="firstName">First Name</Label>
+            <Input
+              id="firstName"
+              placeholder="John"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lastName">Last Name</Label>
+            <Input
+              id="lastName"
+              placeholder="Doe"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -90,6 +101,25 @@ const RegisterForm = () => {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Creating account..." : "Create account"}
         </Button>
+        
+        <div className="relative my-4">
+          <Separator />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="bg-background px-2 text-xs text-muted-foreground">
+              OR CONTINUE WITH
+            </span>
+          </div>
+        </div>
+        
+        <Button 
+          type="button"
+          variant="outline" 
+          className="w-full" 
+          onClick={handleGoogleSignIn}
+        >
+          <FcGoogle className="mr-2 h-4 w-4" /> Sign up with Google
+        </Button>
+        
         <div className="text-center text-sm mt-4">
           Already have an account?{" "}
           <Link to="/login" className="text-primary font-medium hover:underline">
