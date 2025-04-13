@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import WalletCard from "@/components/wallet/WalletCard";
 import WalletForm, { WalletFormData } from "@/components/wallet/WalletForm";
 import TransferFundsForm, { TransferFormData } from "@/components/wallet/TransferFundsForm";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { Plus, ArrowLeftRight } from "lucide-react";
 import { generateId } from "@/lib/utils";
 

@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import ExpenseCard, { ExpenseProps } from "@/components/expense/ExpenseCard";
 import ExpenseForm, { ExpenseFormData } from "@/components/expense/ExpenseForm";
-import { useToast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { Plus, Filter } from "lucide-react";
 import { generateId, groupExpensesByDate } from "@/lib/utils";
 
