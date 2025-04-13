@@ -29,7 +29,7 @@ const App = () => {
     // If it doesn't exist, create it
     if (!viewportMeta) {
       viewportMeta = document.createElement('meta');
-      viewportMeta.name = 'viewport';
+      viewportMeta.setAttribute('name', 'viewport');
       document.head.appendChild(viewportMeta);
     }
     
@@ -38,19 +38,19 @@ const App = () => {
     
     // Add mobile web app capable meta tags for iOS
     const appleMeta = document.createElement('meta');
-    appleMeta.name = 'apple-mobile-web-app-capable';
-    appleMeta.content = 'yes';
+    appleMeta.setAttribute('name', 'apple-mobile-web-app-capable');
+    appleMeta.setAttribute('content', 'yes');
     document.head.appendChild(appleMeta);
     
     const statusBarMeta = document.createElement('meta');
-    statusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
-    statusBarMeta.content = 'black-translucent';
+    statusBarMeta.setAttribute('name', 'apple-mobile-web-app-status-bar-style');
+    statusBarMeta.setAttribute('content', 'black-translucent');
     document.head.appendChild(statusBarMeta);
     
     // Add theme color for Android
     const themeMeta = document.createElement('meta');
-    themeMeta.name = 'theme-color';
-    themeMeta.content = '#ffffff';
+    themeMeta.setAttribute('name', 'theme-color');
+    themeMeta.setAttribute('content', '#ffffff');
     document.head.appendChild(themeMeta);
   }, []);
 
