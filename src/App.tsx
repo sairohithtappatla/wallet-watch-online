@@ -12,7 +12,9 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Wallets from "./pages/Wallets";
 import Expenses from "./pages/Expenses";
+import Transactions from "./pages/Transactions";
 import Analysis from "./pages/Analysis";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +32,9 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/wallets" element={<Wallets />} />
           <Route path="/expenses" element={<Expenses />} />
+          <Route path="/transactions" element={<Transactions />} />
           <Route path="/analysis" element={<Analysis />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
