@@ -5,7 +5,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ErrorProvider } from "@/contexts/ErrorContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 
 // Pages
 import Login from "./pages/Login";
@@ -16,7 +18,7 @@ import Expenses from "./pages/Expenses";
 import Transactions from "./pages/Transactions";
 import Analysis from "./pages/Analysis";
 import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
+import ErrorPage from "./pages/ErrorPage";
 
 // Protected route component
 const ProtectedRoute = () => {
@@ -24,8 +26,12 @@ const ProtectedRoute = () => {
   const location = useLocation();
 
   if (isLoading) {
-    // You could add a loading spinner here
-    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Loading your account...</p>
+      </div>
+    );
   }
 
   if (!user) {
@@ -40,7 +46,12 @@ const PublicRoute = () => {
   const { user, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-muted-foreground">Loading...</p>
+      </div>
+    );
   }
   
   if (user) {
@@ -109,8 +120,18 @@ const AppContent = () => {
       <Route path="/expenses/new" element={<Navigate to="/expenses" replace />} />
       <Route path="/wallets/transfer" element={<Navigate to="/wallets" replace />} />
       
+      {/* Error routes */}
+      <Route path="/error" element={<ErrorPage />} />
+      <Route path="/unauthorized" element={
+        <ErrorPage 
+          status={401} 
+          title="Unauthorized" 
+          message="You don't have permission to access this resource." 
+        />
+      } />
+      
       {/* 404 route */}
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={<ErrorPage />} />
     </Routes>
   );
 };
@@ -123,11 +144,13 @@ const App = () => {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <AppContent />
-          </TooltipProvider>
+          <ErrorProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <AppContent />
+            </TooltipProvider>
+          </ErrorProvider>
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
