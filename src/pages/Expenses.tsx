@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import ExpenseCard, { ExpenseProps } from "@/components/expense/ExpenseCard";
@@ -57,6 +57,19 @@ const Expenses = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseFormData | null>(null);
   const { toast } = useToast();
+
+  // Listen for custom event to open expense form
+  useEffect(() => {
+    const handleOpenExpenseForm = () => {
+      setIsFormOpen(true);
+    };
+    
+    window.addEventListener('open-expense-form', handleOpenExpenseForm);
+    
+    return () => {
+      window.removeEventListener('open-expense-form', handleOpenExpenseForm);
+    };
+  }, []);
 
   // Group expenses by date
   const groupedExpenses = groupExpensesByDate(expenses);

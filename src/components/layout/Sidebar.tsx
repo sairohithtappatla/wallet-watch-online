@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -26,6 +26,7 @@ const Sidebar = ({ className }: SidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -68,12 +69,24 @@ const Sidebar = ({ className }: SidebarProps) => {
   // Quick actions
   const quickActions = [
     { 
-      href: "/expenses/new", 
+      onClick: () => {
+        navigate("/expenses");
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('open-expense-form'));
+        }, 100);
+        closeMenu();
+      }, 
       icon: <PlusCircle className="h-5 w-5" />, 
       label: "Add Expense" 
     },
     { 
-      href: "/wallets/transfer", 
+      onClick: () => {
+        navigate("/wallets");
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('open-transfer-form'));
+        }, 100);
+        closeMenu();
+      }, 
       icon: <CircleDollarSign className="h-5 w-5" />, 
       label: "Transfer Money" 
     },
@@ -127,23 +140,16 @@ const Sidebar = ({ className }: SidebarProps) => {
               Quick Actions
             </h2>
             <div className="space-y-1">
-              {quickActions.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  onClick={closeMenu}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent hover:text-accent-foreground"
-                    )
-                  }
+              {quickActions.map((item, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  onClick={item.onClick}
+                  className="w-full justify-start gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
                   {item.icon}
                   {item.label}
-                </NavLink>
+                </Button>
               ))}
             </div>
           </div>

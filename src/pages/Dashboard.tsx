@@ -1,5 +1,6 @@
 
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import WalletCard from "@/components/wallet/WalletCard";
 import ExpenseCard from "@/components/expense/ExpenseCard";
 import StatCard from "@/components/analysis/StatCard";
 import { formatCurrency, calculateTotalBalance } from "@/lib/utils";
-import { Plus, Wallet, ArrowDownUp, Activity, TrendingUp } from "lucide-react";
+import { Plus, Wallet, ArrowDownUp, Activity, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import SpendingChart from "@/components/analysis/SpendingChart";
 
@@ -57,6 +58,7 @@ const mockExpenses = [
 const Dashboard = () => {
   const [wallets] = useState(mockWallets);
   const [expenses] = useState(mockExpenses);
+  const navigate = useNavigate();
 
   // Calculate total balance across all wallets
   const totalBalance = useMemo(() => calculateTotalBalance(wallets), [wallets]);
@@ -76,16 +78,32 @@ const Dashboard = () => {
     );
   }, [expenses]);
 
+  // Quick action handlers
+  const handleAddExpense = () => {
+    navigate("/expenses");
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-expense-form'));
+    }, 100);
+  };
+
+  const handleTransferFunds = () => {
+    navigate("/wallets");
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('open-transfer-form'));
+    }, 100);
+  };
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <div className="flex gap-2">
-          <Link to="/expenses/new">
-            <Button size="sm" className="gap-1">
-              <Plus className="h-4 w-4" /> Add Expense
-            </Button>
-          </Link>
+          <Button variant="outline" size="sm" className="gap-1" onClick={handleTransferFunds}>
+            <ArrowLeftRight className="h-4 w-4" /> Transfer
+          </Button>
+          <Button size="sm" className="gap-1" onClick={handleAddExpense}>
+            <Plus className="h-4 w-4" /> Add Expense
+          </Button>
         </div>
       </div>
 

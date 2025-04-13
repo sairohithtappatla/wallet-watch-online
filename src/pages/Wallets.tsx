@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import WalletCard from "@/components/wallet/WalletCard";
@@ -22,6 +22,19 @@ const Wallets = () => {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [editingWallet, setEditingWallet] = useState<WalletFormData | null>(null);
   const { toast } = useToast();
+
+  // Listen for custom event to open transfer form
+  useEffect(() => {
+    const handleOpenTransferForm = () => {
+      setIsTransferOpen(true);
+    };
+    
+    window.addEventListener('open-transfer-form', handleOpenTransferForm);
+    
+    return () => {
+      window.removeEventListener('open-transfer-form', handleOpenTransferForm);
+    };
+  }, []);
 
   // Handler for adding a new wallet
   const handleAddWallet = (walletData: WalletFormData) => {
