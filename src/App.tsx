@@ -3,9 +3,9 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Pages
 import Login from "./pages/Login";
@@ -17,8 +17,6 @@ import Transactions from "./pages/Transactions";
 import Analysis from "./pages/Analysis";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-
-const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = () => {
@@ -117,19 +115,22 @@ const AppContent = () => {
   );
 };
 
+// Fix: Create a new instance of QueryClient outside of the component
+const queryClient = new QueryClient();
+
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
   );
 };
 
