@@ -35,6 +35,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check for authentication errors in the URL (OAuth redirect)
+    const checkForErrors = () => {
+      const queryParams = new URLSearchParams(window.location.search);
+      const error = queryParams.get('error');
+      const errorDescription = queryParams.get('error_description');
+      
+      if (error) {
+        console.error("Auth redirect error:", error, errorDescription);
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: errorDescription || "There was a problem with the authentication. Please try again.",
+        });
+      }
+    };
+    
+    checkForErrors();
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -54,7 +72,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -136,10 +154,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signInWithGoogle = async () => {
     try {
+      const origin = window.location.origin;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard',
+          redirectTo: `${origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       });
       
@@ -152,6 +175,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "Google sign in failed",
         description: error.message || "An error occurred during Google sign in",
       });
+      throw error;
     }
   };
 

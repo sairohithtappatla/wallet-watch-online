@@ -2,6 +2,8 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import ErrorPage from "./ErrorPage";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
 const NotFound = () => {
   const location = useLocation();
@@ -18,7 +20,15 @@ const NotFound = () => {
       status={404}
       title="Page Not Found"
       message={`The page at ${location.pathname} could not be found.`}
-    />
+    >
+      <Alert variant="destructive" className="mt-6">
+        <ExclamationTriangleIcon className="h-4 w-4" />
+        <AlertTitle>Navigation Error</AlertTitle>
+        <AlertDescription>
+          The requested URL was not found on this server. Please check the URL and try again.
+        </AlertDescription>
+      </Alert>
+    </ErrorPage>
   );
 };
 

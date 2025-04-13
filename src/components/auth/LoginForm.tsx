@@ -9,11 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
@@ -21,12 +25,14 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setAuthError(null);
     
     try {
       await signIn(email, password);
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      setAuthError(error.message || "Failed to sign in. Please check your credentials.");
       // Error is already handled in the auth context
     } finally {
       setIsLoading(false);
@@ -35,10 +41,12 @@ const LoginForm = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      setAuthError(null);
       await signInWithGoogle();
       // Note: Redirect will be handled by the OAuth provider
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google sign in error:", error);
+      setAuthError(error.message || "Failed to sign in with Google. Please try again.");
       // Error is already handled in the auth context
     }
   };
@@ -48,6 +56,13 @@ const LoginForm = () => {
       title="Welcome Back"
       subtitle="Log in to your account to continue"
     >
+      {authError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{authError}</AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -57,6 +72,7 @@ const LoginForm = () => {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
             required
           />
         </div>
@@ -76,11 +92,18 @@ const LoginForm = () => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
             required
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+          {isLoading ? (
+            <>
+              <LoadingSpinner size="sm" className="mr-2" /> Signing in...
+            </>
+          ) : (
+            "Sign in"
+          )}
         </Button>
         
         <div className="relative my-4">
@@ -97,6 +120,7 @@ const LoginForm = () => {
           variant="outline" 
           className="w-full" 
           onClick={handleGoogleSignIn}
+          disabled={isLoading}
         >
           <FcGoogle className="mr-2 h-4 w-4" /> Sign in with Google
         </Button>

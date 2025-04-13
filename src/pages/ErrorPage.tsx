@@ -3,23 +3,34 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft, Home, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ErrorPageProps {
   status?: number;
   title?: string;
   message?: string;
+  children?: React.ReactNode;
 }
 
 const ErrorPage = ({
   status = 404,
   title = "Page not found",
   message = "Sorry, we couldn't find the page you're looking for.",
+  children,
 }: ErrorPageProps) => {
   const navigate = useNavigate();
   
   useEffect(() => {
     // Log error for analytics
     console.error(`Error ${status}: ${title} - ${message}`);
+    
+    // For auth errors, check if it's an OAuth redirect error
+    if (status === 401) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('error')) {
+        console.error('OAuth error:', params.get('error'), params.get('error_description'));
+      }
+    }
   }, [status, title, message]);
 
   return (
@@ -41,6 +52,8 @@ const ErrorPage = ({
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <p className="text-muted-foreground">{message}</p>
         </div>
+
+        {children}
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
           <Button variant="outline" onClick={() => window.location.reload()}>

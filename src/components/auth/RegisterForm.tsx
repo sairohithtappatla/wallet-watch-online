@@ -9,6 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const RegisterForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -16,6 +19,7 @@ const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signUp, signInWithGoogle } = useAuth();
@@ -23,12 +27,14 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setAuthError(null);
     
     try {
       await signUp(email, password, firstName, lastName);
       navigate("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      setAuthError(error.message || "Failed to create account. Please try again.");
       // Error is already handled in the auth context
     } finally {
       setIsLoading(false);
@@ -37,10 +43,12 @@ const RegisterForm = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      setAuthError(null);
       await signInWithGoogle();
       // Redirect will be handled by the OAuth provider
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google sign in error:", error);
+      setAuthError(error.message || "Failed to sign in with Google. Please try again.");
       // Error is already handled in the auth context
     }
   };
@@ -50,6 +58,13 @@ const RegisterForm = () => {
       title="Create Account"
       subtitle="Register to start tracking your expenses"
     >
+      {authError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{authError}</AlertDescription>
+        </Alert>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -59,6 +74,7 @@ const RegisterForm = () => {
               placeholder="John"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              disabled={isLoading}
               required
             />
           </div>
@@ -69,6 +85,7 @@ const RegisterForm = () => {
               placeholder="Doe"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -80,6 +97,7 @@ const RegisterForm = () => {
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading}
             required
           />
         </div>
@@ -91,6 +109,7 @@ const RegisterForm = () => {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading}
             required
             minLength={6}
           />
@@ -99,7 +118,13 @@ const RegisterForm = () => {
           </p>
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Creating account..." : "Create account"}
+          {isLoading ? (
+            <>
+              <LoadingSpinner size="sm" className="mr-2" /> Creating account...
+            </>
+          ) : (
+            "Create account"
+          )}
         </Button>
         
         <div className="relative my-4">
@@ -116,6 +141,7 @@ const RegisterForm = () => {
           variant="outline" 
           className="w-full" 
           onClick={handleGoogleSignIn}
+          disabled={isLoading}
         >
           <FcGoogle className="mr-2 h-4 w-4" /> Sign up with Google
         </Button>
