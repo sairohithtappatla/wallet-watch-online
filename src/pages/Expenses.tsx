@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import ExpenseCard, { ExpenseProps } from "@/components/expense/ExpenseCard";
+import ExpenseCard, { ExpenseProps, ExpenseType } from "@/components/expense/ExpenseCard";
 import ExpenseForm, { ExpenseFormData } from "@/components/expense/ExpenseForm";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Filter, Loader2 } from "lucide-react";
@@ -99,7 +99,7 @@ const Expenses = () => {
           date: new Date(expense.date).toISOString().split('T')[0],
           walletId: expense.wallet_id,
           walletName: expense.wallets?.name || "Unknown",
-          type: Number(expense.amount) >= 0 ? "income" : "expense",
+          type: Number(expense.amount) >= 0 ? "income" as ExpenseType : "expense" as ExpenseType,
           onEdit: () => {},
           onDelete: () => {},
         })) || [];
@@ -185,7 +185,7 @@ const Expenses = () => {
         date: new Date(newExpense.date).toISOString().split('T')[0],
         walletId: newExpense.wallet_id,
         walletName: newExpense.wallets?.name || wallet.name,
-        type: Number(newExpense.amount) >= 0 ? "income" : "expense",
+        type: Number(newExpense.amount) >= 0 ? "income" as ExpenseType : "expense" as ExpenseType,
         onEdit: () => {},
         onDelete: () => {},
       };
@@ -320,7 +320,7 @@ const Expenses = () => {
         date: new Date(updatedExpense.date).toISOString().split('T')[0],
         walletId: updatedExpense.wallet_id,
         walletName: updatedExpense.wallets?.name || wallet.name,
-        type: Number(updatedExpense.amount) >= 0 ? "income" : "expense",
+        type: Number(updatedExpense.amount) >= 0 ? "income" as ExpenseType : "expense" as ExpenseType,
         onEdit: () => {},
         onDelete: () => {},
       };

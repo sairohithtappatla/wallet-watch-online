@@ -50,11 +50,11 @@ const ExpenseCard = ({
     <Card className="mb-3">
       <CardHeader className="p-3 pb-0 flex flex-row justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className={`p-1.5 rounded-full bg-${type === "income" ? "expense-income/10" : "expense-expense/10"}`}>
+          <div className={`p-1.5 rounded-full ${type === "income" ? "bg-green-100" : "bg-red-100"}`}>
             {type === "income" ? (
-              <ArrowUp className="h-4 w-4 text-expense-income" />
+              <ArrowUp className="h-4 w-4 text-green-600" />
             ) : (
-              <ArrowDown className="h-4 w-4 text-expense-expense" />
+              <ArrowDown className="h-4 w-4 text-red-600" />
             )}
           </div>
           <div>
@@ -90,7 +90,7 @@ const ExpenseCard = ({
             {walletName}
           </Badge>
         </div>
-        <span className={`font-semibold ${type === "income" ? "text-expense-income" : "text-expense-expense"}`}>
+        <span className={`font-semibold ${type === "income" ? "text-green-600" : "text-red-600"}`}>
           {type === "income" ? "+" : "-"}{formatCurrency(amount, currency)}
         </span>
       </CardContent>
