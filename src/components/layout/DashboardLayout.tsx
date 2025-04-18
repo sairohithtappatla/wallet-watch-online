@@ -44,12 +44,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   }, [user]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="flex flex-col flex-1">
         <Navbar userName={userName} />
-        <ScrollArea className="flex-1">
-          <main className="p-4 md:p-6 pb-24 md:pb-6">{children}</main>
+        <ScrollArea className="flex-1 overflow-auto">
+          <main className="p-4 md:p-6 pb-28 md:pb-6">{children}</main>
         </ScrollArea>
         <MobileFooter />
       </div>

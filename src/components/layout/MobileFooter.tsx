@@ -1,14 +1,15 @@
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Wallet, ChartBar, Settings } from "lucide-react";
+import { Home, Wallet, ChartBar, Settings, PieChart } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 const MobileFooter = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItems = [
-    { icon: Home, label: "Home", path: "/dashboard" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Wallet, label: "Wallets", path: "/wallets" },
     { icon: ChartBar, label: "Analysis", path: "/analysis" },
     { icon: Settings, label: "Settings", path: "/settings" },
@@ -16,22 +17,29 @@ const MobileFooter = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      <div className="bg-white border-t px-4 py-2">
+      <motion.div 
+        className="bg-white border-t px-4 py-2 shadow-lg"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         <nav className="flex items-center justify-around">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <button
+              <motion.button
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className="flex flex-col items-center px-3 py-2 relative group"
+                whileTap={{ scale: 0.9 }}
               >
-                <div
-                  className={cn(
-                    "absolute inset-0 rounded-lg transition-colors duration-300 group-hover:bg-primary/5",
-                    isActive && "bg-primary/10"
-                  )}
-                />
+                {isActive && (
+                  <motion.div
+                    className="absolute inset-0 bg-primary/10 rounded-lg"
+                    layoutId="activeTab"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
                 <item.icon
                   className={cn(
                     "h-5 w-5 mb-1 transition-colors duration-300",
@@ -48,11 +56,11 @@ const MobileFooter = () => {
                 >
                   {item.label}
                 </span>
-              </button>
+              </motion.button>
             );
           })}
         </nav>
-      </div>
+      </motion.div>
     </div>
   );
 };
