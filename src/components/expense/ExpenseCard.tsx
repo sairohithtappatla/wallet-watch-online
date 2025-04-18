@@ -46,25 +46,27 @@ const ExpenseCard = ({
   onEdit,
   onDelete,
 }: ExpenseProps) => {
+  const isIncome = type === "income";
+
   return (
-    <Card className="mb-3">
+    <Card className="mb-3 hover:shadow-md transition-shadow">
       <CardHeader className="p-3 pb-0 flex flex-row justify-between items-center">
         <div className="flex items-center gap-2">
-          <div className={`p-1.5 rounded-full ${type === "income" ? "bg-green-100" : "bg-red-100"}`}>
-            {type === "income" ? (
+          <div className={`p-1.5 rounded-full ${isIncome ? "bg-green-100" : "bg-red-100"}`}>
+            {isIncome ? (
               <ArrowUp className="h-4 w-4 text-green-600" />
             ) : (
               <ArrowDown className="h-4 w-4 text-red-600" />
             )}
           </div>
           <div>
-            <p className="text-sm font-medium">{description}</p>
+            <p className="text-sm font-medium line-clamp-1">{description}</p>
             <p className="text-xs text-muted-foreground">{formatDate(date)}</p>
           </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button variant="ghost" className="h-8 w-8 p-0" aria-label="More options">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -82,16 +84,20 @@ const ExpenseCard = ({
         </DropdownMenu>
       </CardHeader>
       <CardContent className="p-3 pt-2 flex flex-row justify-between items-center">
-        <div className="flex flex-row gap-2">
-          <Badge variant="outline" className="h-6">
-            {category}
-          </Badge>
-          <Badge variant="secondary" className="h-6">
-            {walletName}
-          </Badge>
+        <div className="flex flex-wrap gap-2">
+          {category && (
+            <Badge variant="outline" className="h-6">
+              {category}
+            </Badge>
+          )}
+          {walletName && (
+            <Badge variant="secondary" className="h-6">
+              {walletName}
+            </Badge>
+          )}
         </div>
-        <span className={`font-semibold ${type === "income" ? "text-green-600" : "text-red-600"}`}>
-          {type === "income" ? "+" : "-"}{formatCurrency(amount, currency)}
+        <span className={`font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}>
+          {isIncome ? "+" : "-"}{formatCurrency(amount, currency)}
         </span>
       </CardContent>
     </Card>

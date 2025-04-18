@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -16,9 +16,11 @@ import {
 } from "recharts";
 import type { ExpenseProps } from "../expense/ExpenseCard";
 import { formatCurrency } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface SpendingChartProps {
   expenses: Omit<ExpenseProps, "onEdit" | "onDelete">[];
+  isLoading?: boolean;
 }
 
 const CHART_COLORS = [
@@ -32,7 +34,7 @@ const getCategoryColor = (category: string, index: number) => {
   return CHART_COLORS[index % CHART_COLORS.length];
 };
 
-const SpendingChart = ({ expenses }: SpendingChartProps) => {
+const SpendingChart = ({ expenses, isLoading = false }: SpendingChartProps) => {
   const [activeTab, setActiveTab] = useState("categories");
 
   // Category-based data processing
@@ -107,6 +109,22 @@ const SpendingChart = ({ expenses }: SpendingChartProps) => {
     return null;
   };
 
+  if (isLoading) {
+    return (
+      <Card className="h-[500px]">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Spending Analysis</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-[400px]">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Loading chart data...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="h-[500px]">
       <CardHeader className="pb-2">
@@ -150,7 +168,7 @@ const SpendingChart = ({ expenses }: SpendingChartProps) => {
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <p className="text-muted-foreground">
-                      No expense data available
+                      No expense data available. Add some expenses to see your spending breakdown.
                     </p>
                   </div>
                 )}
@@ -173,7 +191,7 @@ const SpendingChart = ({ expenses }: SpendingChartProps) => {
                   >
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), "USD")} />
                     <Legend />
                     <Bar dataKey="Income" fill="#10B981" />
                     <Bar dataKey="Expense" fill="#EF4444" />
@@ -181,7 +199,7 @@ const SpendingChart = ({ expenses }: SpendingChartProps) => {
                 ) : (
                   <div className="flex h-full items-center justify-center">
                     <p className="text-muted-foreground">
-                      No monthly data available
+                      No monthly data available. Add transactions to see your monthly trends.
                     </p>
                   </div>
                 )}

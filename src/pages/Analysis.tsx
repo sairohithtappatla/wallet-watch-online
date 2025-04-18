@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/analysis/StatCard";
 import SpendingChart from "@/components/analysis/SpendingChart";
@@ -16,94 +17,148 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { PiggyBank, TrendingDown, TrendingUp, Wallet } from "lucide-react";
-
-// Mock data
-const mockExpenses = [
-  {
-    id: "e1",
-    amount: 125,
-    currency: "USD",
-    description: "Grocery Shopping",
-    category: "Food",
-    date: "2025-04-08",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e2",
-    amount: 2500,
-    currency: "USD",
-    description: "Monthly Salary",
-    category: "Salary",
-    date: "2025-04-01",
-    walletId: "w2",
-    walletName: "Bank",
-    type: "income" as const,
-  },
-  {
-    id: "e3",
-    amount: 50,
-    currency: "USD",
-    description: "Movie Night",
-    category: "Entertainment",
-    date: "2025-04-05",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e4",
-    amount: 75,
-    currency: "USD",
-    description: "Shopping",
-    category: "Shopping",
-    date: "2025-04-03",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e5",
-    amount: 30,
-    currency: "USD",
-    description: "Gas",
-    category: "Transport",
-    date: "2025-04-07",
-    walletId: "w2",
-    walletName: "Bank",
-    type: "expense" as const,
-  },
-];
-
-// Mock monthly summary data
-const monthlySummary = [
-  { month: "Jan", income: 3200, expenses: 2800, savings: 400 },
-  { month: "Feb", income: 3500, expenses: 2500, savings: 1000 },
-  { month: "Mar", income: 3200, expenses: 2900, savings: 300 },
-  { month: "Apr", income: 3800, expenses: 2600, savings: 1200 },
-  { month: "May", income: 3400, expenses: 3000, savings: 400 },
-  { month: "Jun", income: 3700, expenses: 2800, savings: 900 },
-  { month: "Jul", income: 3300, expenses: 2900, savings: 400 },
-  { month: "Aug", income: 3900, expenses: 2700, savings: 1200 },
-  { month: "Sep", income: 3600, expenses: 3100, savings: 500 },
-  { month: "Oct", income: 3500, expenses: 3200, savings: 300 },
-  { month: "Nov", income: 3900, expenses: 2800, savings: 1100 },
-  { month: "Dec", income: 4200, expenses: 3600, savings: 600 },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useToast } from "@/hooks/use-toast";
 
 const Analysis = () => {
-  // Calculate total income, expenses, and savings
-  const totalIncome = mockExpenses
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [monthlySummary, setMonthlySummary] = useState<any[]>([]);
+  
+  // Fetch expenses from Supabase
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        
+        const { data, error } = await supabase
+          .from('expenses')
+          .select(`
+            id,
+            amount,
+            description,
+            category,
+            date,
+            wallet_id,
+            wallets (
+              name,
+              currency
+            )
+          `)
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error('Error fetching expenses:', error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load expenses",
+            description: error.message,
+          });
+          return;
+        }
+        
+        // Format expenses for display
+        const formattedExpenses = data?.map(expense => ({
+          id: expense.id,
+          amount: Math.abs(Number(expense.amount)),
+          currency: expense.wallets?.currency || "USD",
+          description: expense.description || "",
+          category: expense.category || "Other",
+          date: new Date(expense.date).toISOString().split('T')[0],
+          walletId: expense.wallet_id,
+          walletName: expense.wallets?.name || "Unknown",
+          type: Number(expense.amount) >= 0 ? "income" as const : "expense" as const,
+        })) || [];
+        
+        setExpenses(formattedExpenses);
+        
+        // Generate monthly summary
+        generateMonthlySummary(formattedExpenses);
+      } catch (error: any) {
+        console.error('Failed to fetch expenses:', error);
+        toast({
+          variant: "destructive",
+          title: "An error occurred",
+          description: "Could not load your expenses. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchExpenses();
+  }, [user, toast]);
+  
+  // Generate monthly summary data
+  const generateMonthlySummary = (expensesData: any[]) => {
+    const months: Record<string, { income: number; expenses: number; savings: number }> = {};
+    const now = new Date();
+    
+    // Initialize last 12 months
+    for (let i = 11; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthKey = month.toLocaleString('default', { month: 'short' });
+      months[monthKey] = { income: 0, expenses: 0, savings: 0 };
+    }
+    
+    // Fill in with real data
+    expensesData.forEach(expense => {
+      const expenseDate = new Date(expense.date);
+      const monthKey = expenseDate.toLocaleString('default', { month: 'short' });
+      
+      if (months[monthKey]) {
+        if (expense.type === "income") {
+          months[monthKey].income += expense.amount;
+        } else {
+          months[monthKey].expenses += expense.amount;
+        }
+      }
+    });
+    
+    // Calculate savings for each month
+    Object.keys(months).forEach(month => {
+      months[month].savings = months[month].income - months[month].expenses;
+    });
+    
+    // Convert to array for charts
+    const summaryData = Object.keys(months).map(month => ({
+      month,
+      income: months[month].income,
+      expenses: months[month].expenses,
+      savings: months[month].savings
+    }));
+    
+    setMonthlySummary(summaryData);
+  };
+
+  // Calculate total income and expenses
+  const totalIncome = expenses
     .filter((e) => e.type === "income")
     .reduce((sum, expense) => sum + expense.amount, 0);
 
-  const totalExpenses = mockExpenses
+  const totalExpenses = expenses
     .filter((e) => e.type === "expense")
     .reduce((sum, expense) => sum + expense.amount, 0);
 
   const totalSavings = totalIncome - totalExpenses;
   const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-muted-foreground">Loading analysis data...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -115,17 +170,17 @@ const Analysis = () => {
         <StatCard
           title="Total Income"
           value={formatCurrency(totalIncome, "USD")}
-          icon={<TrendingUp className="text-expense-income" />}
+          icon={<TrendingUp className="text-green-500" />}
         />
         <StatCard
           title="Total Expenses"
           value={formatCurrency(totalExpenses, "USD")}
-          icon={<TrendingDown className="text-expense-expense" />}
+          icon={<TrendingDown className="text-red-500" />}
         />
         <StatCard
           title="Total Savings"
           value={formatCurrency(totalSavings, "USD")}
-          icon={<PiggyBank />}
+          icon={<PiggyBank className={totalSavings >= 0 ? "text-green-500" : "text-red-500"} />}
         />
         <StatCard
           title="Savings Rate"
@@ -136,7 +191,7 @@ const Analysis = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-6">
-        <SpendingChart expenses={mockExpenses} />
+        <SpendingChart expenses={expenses} />
         
         <Card className="h-[500px]">
           <CardHeader>
@@ -144,19 +199,27 @@ const Analysis = () => {
           </CardHeader>
           <CardContent className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlySummary}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value) => [`$${value}`, ""]}
-                  labelFormatter={(label) => `Month: ${label}`}
-                />
-                <Legend />
-                <Bar dataKey="income" name="Income" fill="#10B981" />
-                <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
-                <Bar dataKey="savings" name="Savings" fill="#3B82F6" />
-              </BarChart>
+              {monthlySummary.length > 0 ? (
+                <BarChart data={monthlySummary}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(Number(value), "USD")}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Legend />
+                  <Bar dataKey="income" name="Income" fill="#10B981" />
+                  <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
+                  <Bar dataKey="savings" name="Savings" fill="#3B82F6" />
+                </BarChart>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-muted-foreground">
+                    No data available. Add some transactions to see your monthly trends.
+                  </p>
+                </div>
+              )}
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -175,47 +238,71 @@ const Analysis = () => {
             </TabsList>
             <TabsContent value="income" className="h-[400px] pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlySummary}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`$${value}`, "Income"]}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="income" name="Income" fill="#10B981" />
-                </BarChart>
+                {monthlySummary.length > 0 ? (
+                  <BarChart data={monthlySummary}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      labelFormatter={(label) => `Month: ${label}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="income" name="Income" fill="#10B981" />
+                  </BarChart>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-muted-foreground">
+                      No income data available. Add income transactions to see your yearly overview.
+                    </p>
+                  </div>
+                )}
               </ResponsiveContainer>
             </TabsContent>
             <TabsContent value="expenses" className="h-[400px] pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlySummary}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`$${value}`, "Expenses"]}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
-                </BarChart>
+                {monthlySummary.length > 0 ? (
+                  <BarChart data={monthlySummary}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      labelFormatter={(label) => `Month: ${label}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
+                  </BarChart>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-muted-foreground">
+                      No expense data available. Add expense transactions to see your yearly overview.
+                    </p>
+                  </div>
+                )}
               </ResponsiveContainer>
             </TabsContent>
             <TabsContent value="savings" className="h-[400px] pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlySummary}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => [`$${value}`, "Savings"]}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="savings" name="Savings" fill="#3B82F6" />
-                </BarChart>
+                {monthlySummary.length > 0 ? (
+                  <BarChart data={monthlySummary}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      labelFormatter={(label) => `Month: ${label}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="savings" name="Savings" fill="#3B82F6" />
+                  </BarChart>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <p className="text-muted-foreground">
+                      No savings data available. Add income and expense transactions to calculate your savings.
+                    </p>
+                  </div>
+                )}
               </ResponsiveContainer>
             </TabsContent>
           </Tabs>

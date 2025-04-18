@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,54 +11,89 @@ import { formatCurrency, calculateTotalBalance } from "@/lib/utils";
 import { Plus, Wallet, ArrowDownUp, Activity, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import SpendingChart from "@/components/analysis/SpendingChart";
-
-// Mock data
-const mockWallets = [
-  { id: "w1", name: "Cash", balance: 850, currency: "USD" },
-  { id: "w2", name: "Bank", balance: 3500, currency: "USD" },
-  { id: "w3", name: "Savings", balance: 12000, currency: "USD" },
-];
-
-const mockExpenses = [
-  {
-    id: "e1",
-    amount: 125,
-    currency: "USD",
-    description: "Grocery Shopping",
-    category: "Food",
-    date: "2025-04-08",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e2",
-    amount: 2500,
-    currency: "USD",
-    description: "Monthly Salary",
-    category: "Salary",
-    date: "2025-04-01",
-    walletId: "w2",
-    walletName: "Bank",
-    type: "income" as const,
-  },
-  {
-    id: "e3",
-    amount: 50,
-    currency: "USD",
-    description: "Movie Night",
-    category: "Entertainment",
-    date: "2025-04-05",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const [wallets] = useState(mockWallets);
-  const [expenses] = useState(mockExpenses);
+  const [wallets, setWallets] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // Fetch wallets
+        const { data: walletsData, error: walletsError } = await supabase
+          .from('wallets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (walletsError) throw walletsError;
+        
+        setWallets(walletsData || []);
+        
+        // Fetch expenses
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select(`
+            id,
+            amount,
+            description,
+            category,
+            date,
+            wallet_id,
+            wallets (
+              name,
+              currency
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .limit(3);
+        
+        if (expensesError) throw expensesError;
+        
+        // Format expenses for display
+        const formattedExpenses = expensesData?.map(expense => ({
+          id: expense.id,
+          amount: Math.abs(Number(expense.amount)),
+          currency: expense.wallets?.currency || "USD",
+          description: expense.description || "",
+          category: expense.category || "Other",
+          date: new Date(expense.date).toISOString().split('T')[0],
+          walletId: expense.wallet_id,
+          walletName: expense.wallets?.name || "Unknown",
+          type: Number(expense.amount) >= 0 ? "income" as const : "expense" as const,
+          onEdit: () => {},
+          onDelete: () => {},
+        })) || [];
+        
+        setExpenses(formattedExpenses);
+      } catch (error: any) {
+        console.error('Failed to fetch data:', error);
+        toast({
+          variant: "destructive",
+          title: "An error occurred",
+          description: "Could not load your dashboard data. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [user, toast]);
 
   // Calculate total balance across all wallets
   const totalBalance = useMemo(() => calculateTotalBalance(wallets), [wallets]);
@@ -93,6 +128,17 @@ const Dashboard = () => {
     }, 100);
   };
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
@@ -112,19 +158,16 @@ const Dashboard = () => {
           title="Total Balance"
           value={formatCurrency(totalBalance, "USD")}
           icon={<Wallet />}
-          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="Income"
           value={formatCurrency(totalIncome, "USD")}
           icon={<TrendingUp />}
-          trend={{ value: 5, isPositive: true }}
         />
         <StatCard
           title="Expenses"
           value={formatCurrency(totalExpense, "USD")}
           icon={<ArrowDownUp />}
-          trend={{ value: 8, isPositive: false }}
         />
         <StatCard
           title="Total Savings"
@@ -146,19 +189,29 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {wallets.map((wallet) => (
-              <WalletCard
-                key={wallet.id}
-                {...wallet}
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
-            ))}
+            {wallets.length > 0 ? (
+              wallets.slice(0, 3).map((wallet) => (
+                <WalletCard
+                  key={wallet.id}
+                  id={wallet.id}
+                  name={wallet.name}
+                  balance={wallet.balance}
+                  currency={wallet.currency}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                />
+              ))
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground mb-3">No wallets found</p>
+                <Button size="sm" onClick={() => navigate("/wallets")}>Add Wallet</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
         
         <div className="lg:col-span-2">
-          <SpendingChart expenses={expenses} />
+          <SpendingChart expenses={expenses.map(e => ({ ...e, onEdit: undefined, onDelete: undefined }))} />
         </div>
       </div>
 
@@ -167,7 +220,7 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Recent Transactions</CardTitle>
-              <Link to="/transactions">
+              <Link to="/expenses">
                 <Button variant="ghost" size="sm">
                   View All
                 </Button>
@@ -175,16 +228,23 @@ const Dashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {expenses.map((expense) => (
-                <ExpenseCard
-                  key={expense.id}
-                  {...expense}
-                  onEdit={() => {}}
-                  onDelete={() => {}}
-                />
-              ))}
-            </div>
+            {expenses.length > 0 ? (
+              <div className="space-y-2">
+                {expenses.map((expense) => (
+                  <ExpenseCard
+                    key={expense.id}
+                    {...expense}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground mb-3">No transactions found</p>
+                <Button size="sm" onClick={handleAddExpense}>Add Transaction</Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
