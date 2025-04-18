@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { FcGoogle } from "react-icons/fc";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -20,7 +21,24 @@ const LoginForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signInWithGoogle } = useAuth();
+  const isMobile = useIsMobile();
+
+  // Check for OAuth errors in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    if (error) {
+      console.error("Auth error from redirect:", error, errorDescription);
+      setAuthError(errorDescription || `Authentication error: ${error}`);
+      
+      // Clear the error from URL
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +51,6 @@ const LoginForm = () => {
     } catch (error: any) {
       console.error("Login error:", error);
       setAuthError(error.message || "Failed to sign in. Please check your credentials.");
-      // Error is already handled in the auth context
     } finally {
       setIsLoading(false);
     }
@@ -43,11 +60,9 @@ const LoginForm = () => {
     try {
       setAuthError(null);
       await signInWithGoogle();
-      // Note: Redirect will be handled by the OAuth provider
     } catch (error: any) {
       console.error("Google sign in error:", error);
       setAuthError(error.message || "Failed to sign in with Google. Please try again.");
-      // Error is already handled in the auth context
     }
   };
 
@@ -74,6 +89,8 @@ const LoginForm = () => {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
             required
+            className="w-full"
+            autoComplete="email"
           />
         </div>
         <div className="space-y-2">
@@ -94,6 +111,8 @@ const LoginForm = () => {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             required
+            className="w-full"
+            autoComplete="current-password"
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -125,7 +144,7 @@ const LoginForm = () => {
           <FcGoogle className="mr-2 h-4 w-4" /> Sign in with Google
         </Button>
         
-        <div className="text-center text-sm mt-4">
+        <div className={`text-center text-sm mt-4 ${isMobile ? 'pb-4' : ''}`}>
           Don't have an account?{" "}
           <Link to="/register" className="text-primary font-medium hover:underline">
             Sign up

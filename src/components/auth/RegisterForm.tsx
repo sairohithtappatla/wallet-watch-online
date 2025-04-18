@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,18 +11,37 @@ import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const RegisterForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp, signInWithGoogle } = useAuth();
+  const isMobile = useIsMobile();
+
+  // Check for OAuth errors in URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    
+    if (error) {
+      console.error("Auth error from redirect:", error, errorDescription);
+      setAuthError(errorDescription || `Authentication error: ${error}`);
+      
+      // Clear the error from URL
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,11 +50,14 @@ const RegisterForm = () => {
     
     try {
       await signUp(email, password, firstName, lastName);
+      toast({
+        title: "Account created",
+        description: "Please check your email for verification instructions.",
+      });
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Registration error:", error);
       setAuthError(error.message || "Failed to create account. Please try again.");
-      // Error is already handled in the auth context
     } finally {
       setIsLoading(false);
     }
@@ -45,12 +67,14 @@ const RegisterForm = () => {
     try {
       setAuthError(null);
       await signInWithGoogle();
-      // Redirect will be handled by the OAuth provider
     } catch (error: any) {
       console.error("Google sign in error:", error);
       setAuthError(error.message || "Failed to sign in with Google. Please try again.");
-      // Error is already handled in the auth context
     }
+  };
+
+  const toggleShowPassword = () => {
+    setShowPassword(prev => !prev);
   };
 
   return (
@@ -76,6 +100,7 @@ const RegisterForm = () => {
               onChange={(e) => setFirstName(e.target.value)}
               disabled={isLoading}
               required
+              autoComplete="given-name"
             />
           </div>
           <div className="space-y-2">
@@ -86,6 +111,7 @@ const RegisterForm = () => {
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={isLoading}
+              autoComplete="family-name"
             />
           </div>
         </div>
@@ -99,20 +125,33 @@ const RegisterForm = () => {
             onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading}
             required
+            autoComplete="email"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
-            required
-            minLength={6}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              minLength={6}
+              autoComplete="new-password"
+              className="pr-10"
+            />
+            <button
+              type="button"
+              onClick={toggleShowPassword}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground">
             Password must be at least 6 characters
           </p>
@@ -146,7 +185,7 @@ const RegisterForm = () => {
           <FcGoogle className="mr-2 h-4 w-4" /> Sign up with Google
         </Button>
         
-        <div className="text-center text-sm mt-4">
+        <div className={`text-center text-sm mt-4 ${isMobile ? 'pb-4' : ''}`}>
           Already have an account?{" "}
           <Link to="/login" className="text-primary font-medium hover:underline">
             Sign in

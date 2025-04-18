@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AuthContextProps {
   session: Session | null;
@@ -12,6 +13,7 @@ interface AuthContextProps {
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -33,6 +35,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Derived state for convenience
+  const isAuthenticated = !!session && !!user;
 
   useEffect(() => {
     // Check for authentication errors in the URL (OAuth redirect)
@@ -43,11 +50,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       if (error) {
         console.error("Auth redirect error:", error, errorDescription);
+        
+        // Format a more user-friendly error message
+        let displayMessage = errorDescription || "There was a problem with the authentication.";
+        
+        if (error === 'redirect_uri_mismatch') {
+          displayMessage = "The authentication redirect URL is not configured correctly. Please contact support.";
+        } else if (error === 'access_denied') {
+          displayMessage = "Authentication was canceled or denied.";
+        }
+        
         toast({
           variant: "destructive",
           title: "Authentication Error",
-          description: errorDescription || "There was a problem with the authentication. Please try again.",
+          description: displayMessage,
         });
+        
+        // Optionally clear error parameters from URL
+        if (location.search) {
+          navigate(location.pathname, { replace: true });
+        }
       }
     };
     
@@ -59,6 +81,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Only show toast for specific events
+        if (event === 'SIGNED_IN') {
+          toast({
+            title: "Signed in successfully",
+            description: `Welcome${session?.user?.user_metadata?.first_name ? ' ' + session.user.user_metadata.first_name : ''}!`,
+          });
+        } else if (event === 'SIGNED_OUT') {
+          toast({
+            title: "Signed out successfully",
+          });
+        }
       }
     );
 
@@ -72,7 +106,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, navigate, location]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -82,11 +116,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         throw error;
       }
-      
-      toast({
-        title: "Sign in successful",
-        description: "Welcome back!",
-      });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -138,9 +167,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      toast({
-        title: "Signed out successfully",
-      });
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -183,6 +209,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     isLoading,
+    isAuthenticated,
     signIn,
     signUp,
     signOut,
