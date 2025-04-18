@@ -2,6 +2,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import MobileFooter from "./MobileFooter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,8 +49,9 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex flex-col flex-1">
         <Navbar userName={userName} />
         <ScrollArea className="flex-1">
-          <main className="p-4 md:p-6">{children}</main>
+          <main className="p-4 md:p-6 pb-24 md:pb-6">{children}</main>
         </ScrollArea>
+        <MobileFooter />
       </div>
     </div>
   );
