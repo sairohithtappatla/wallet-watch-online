@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -34,9 +27,6 @@ export interface WalletFormData {
   currency: string;
 }
 
-// Default currency set to INR
-const CURRENCIES = ["INR", "USD", "EUR", "GBP", "JPY", "CAD", "AUD"];
-
 const WalletForm = ({
   isOpen,
   onClose,
@@ -48,7 +38,7 @@ const WalletForm = ({
     initialData || {
       name: "",
       balance: 0,
-      currency: "INR", // Default to INR
+      currency: "INR", // Default to INR only
     }
   );
 
@@ -59,7 +49,7 @@ const WalletForm = ({
         initialData || {
           name: "",
           balance: 0,
-          currency: "INR", // Default to INR
+          currency: "INR", // Always INR
         }
       );
     }
@@ -73,16 +63,10 @@ const WalletForm = ({
     });
   };
 
-  const handleCurrencyChange = (currency: string) => {
-    setFormData({
-      ...formData,
-      currency,
-    });
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // Always ensure currency is INR
+    onSave({...formData, currency: "INR"});
   };
 
   return (
@@ -109,27 +93,23 @@ const WalletForm = ({
                 onChange={handleInputChange}
                 className="col-span-3"
                 required
+                autoComplete="off"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="currency" className="text-right">
                 Currency
               </Label>
-              <Select
-                value={formData.currency}
-                onValueChange={handleCurrencyChange}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map((currency) => (
-                    <SelectItem key={currency} value={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="col-span-3">
+                <Input
+                  id="currency"
+                  name="currency"
+                  value="INR"
+                  className="col-span-3 bg-gray-100"
+                  disabled
+                />
+                <span className="text-xs text-muted-foreground mt-1">Indian Rupee (₹) is the default currency</span>
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="balance" className="text-right">
@@ -144,6 +124,7 @@ const WalletForm = ({
                 onChange={handleInputChange}
                 className="col-span-3"
                 required
+                autoComplete="off"
               />
             </div>
           </div>

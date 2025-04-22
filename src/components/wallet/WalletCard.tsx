@@ -23,19 +23,15 @@ export interface WalletProps {
 const WalletCard = ({ id, name, balance, currency, onEdit, onDelete }: WalletProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
-  // Improved hover responsiveness by using pointer events instead of just mouse events
-  const handlePointerEnter = () => setIsHovered(true);
-  const handlePointerLeave = () => setIsHovered(false);
-  
   return (
     <Card 
       className={`h-44 transition-all duration-200 ${
         isHovered ? "shadow-lg transform -translate-y-1" : "shadow"
       }`}
-      onPointerEnter={handlePointerEnter}
-      onPointerLeave={handlePointerLeave}
-      onTouchStart={handlePointerEnter}
-      onTouchEnd={handlePointerLeave}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium flex items-center gap-2">
@@ -44,17 +40,25 @@ const WalletCard = ({ id, name, balance, currency, onEdit, onDelete }: WalletPro
         </CardTitle>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
+            <Button 
+              variant="ghost" 
+              className="h-8 w-8 p-0"
+              style={{ touchAction: "manipulation" }}
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuItem onClick={() => onEdit(id)}>
+            <DropdownMenuItem 
+              onClick={() => onEdit(id)}
+              style={{ touchAction: "manipulation" }}
+            >
               <PenLine className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-destructive focus:text-destructive"
               onClick={() => onDelete(id)}
+              style={{ touchAction: "manipulation" }}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
