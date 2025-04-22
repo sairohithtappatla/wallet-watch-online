@@ -15,9 +15,15 @@ const MobileFooter = () => {
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
-  const handleNavigation = (path: string) => {
-    // Prevent rapid multiple clicks
-    navigate(path);
+  const handleNavigation = (path: string, e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent event bubbling and rapid multiple clicks
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Add a small delay to prevent accidental double clicks/taps
+    setTimeout(() => {
+      navigate(path);
+    }, 50);
   };
 
   return (
@@ -36,12 +42,18 @@ const MobileFooter = () => {
             return (
               <button
                 key={item.path}
-                onClick={() => handleNavigation(item.path)}
+                onClick={(e) => handleNavigation(item.path, e)}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                }}
                 className={cn(
                   "flex flex-col items-center px-3 py-2 relative group",
                   "touch-none select-none" // Improved touch handling
                 )}
-                style={{ touchAction: "manipulation" }} // Better touch behavior
+                style={{ 
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent" // Remove highlight on tap
+                }}
               >
                 {isActive && (
                   <motion.div

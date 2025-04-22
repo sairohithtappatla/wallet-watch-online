@@ -61,12 +61,27 @@ const WalletForm = ({
       ...formData,
       [name]: name === "balance" ? parseFloat(value) || 0 : value,
     });
+    
+    // Prevent event bubbling issues
+    e.stopPropagation();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event from bubbling up
+    
     // Always ensure currency is INR
-    onSave({...formData, currency: "INR"});
+    const updatedData = {...formData, currency: "INR"};
+    onSave(updatedData);
+    
+    // Ensure we clean up properly
+    setTimeout(() => {
+      setFormData({
+        name: "",
+        balance: 0,
+        currency: "INR",
+      });
+    }, 100);
   };
 
   const handleCancel = () => {
@@ -80,8 +95,19 @@ const WalletForm = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open) handleCancel();
+      }}
+    >
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onPointerDownCapture={(e) => {
+          // Fix for touch events not propagating correctly
+          e.stopPropagation();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Wallet" : "Add New Wallet"}</DialogTitle>
           <DialogDescription>
@@ -104,6 +130,8 @@ const WalletForm = ({
                 className="col-span-3"
                 required
                 autoComplete="off"
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -135,6 +163,8 @@ const WalletForm = ({
                 className="col-span-3"
                 required
                 autoComplete="off"
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
               />
             </div>
           </div>
@@ -142,7 +172,11 @@ const WalletForm = ({
             <Button 
               type="button" 
               variant="outline" 
-              onClick={handleCancel}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCancel();
+              }}
               style={{ touchAction: "manipulation" }}
             >
               Cancel
@@ -150,6 +184,7 @@ const WalletForm = ({
             <Button 
               type="submit"
               style={{ touchAction: "manipulation" }}
+              onClick={(e) => e.stopPropagation()}
             >
               {isEditing ? "Save Changes" : "Add Wallet"}
             </Button>
