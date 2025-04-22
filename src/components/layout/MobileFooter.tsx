@@ -15,6 +15,11 @@ const MobileFooter = () => {
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
+  const handleNavigation = (path: string) => {
+    // Prevent rapid multiple clicks
+    navigate(path);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       <motion.div 
@@ -31,7 +36,7 @@ const MobileFooter = () => {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => handleNavigation(item.path)}
                 className={cn(
                   "flex flex-col items-center px-3 py-2 relative group",
                   "touch-none select-none" // Improved touch handling

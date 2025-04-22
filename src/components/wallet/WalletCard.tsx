@@ -23,6 +23,18 @@ export interface WalletProps {
 const WalletCard = ({ id, name, balance, currency, onEdit, onDelete }: WalletProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
+  const handleEdit = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onEdit(id);
+  };
+  
+  const handleDelete = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDelete(id);
+  };
+  
   return (
     <Card 
       className={`h-44 transition-all duration-200 ${
@@ -50,14 +62,14 @@ const WalletCard = ({ id, name, balance, currency, onEdit, onDelete }: WalletPro
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[160px]">
             <DropdownMenuItem 
-              onClick={() => onEdit(id)}
+              onClick={handleEdit}
               style={{ touchAction: "manipulation" }}
             >
               <PenLine className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-destructive focus:text-destructive"
-              onClick={() => onDelete(id)}
+              onClick={handleDelete}
               style={{ touchAction: "manipulation" }}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete

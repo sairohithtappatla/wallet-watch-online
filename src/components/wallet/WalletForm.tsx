@@ -38,7 +38,7 @@ const WalletForm = ({
     initialData || {
       name: "",
       balance: 0,
-      currency: "INR", // Default to INR only
+      currency: "INR",
     }
   );
 
@@ -49,7 +49,7 @@ const WalletForm = ({
         initialData || {
           name: "",
           balance: 0,
-          currency: "INR", // Always INR
+          currency: "INR",
         }
       );
     }
@@ -69,8 +69,18 @@ const WalletForm = ({
     onSave({...formData, currency: "INR"});
   };
 
+  const handleCancel = () => {
+    // Clear the form data and close
+    setFormData({
+      name: "",
+      balance: 0,
+      currency: "INR",
+    });
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Wallet" : "Add New Wallet"}</DialogTitle>
@@ -129,10 +139,18 @@ const WalletForm = ({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleCancel}
+              style={{ touchAction: "manipulation" }}
+            >
               Cancel
             </Button>
-            <Button type="submit">
+            <Button 
+              type="submit"
+              style={{ touchAction: "manipulation" }}
+            >
               {isEditing ? "Save Changes" : "Add Wallet"}
             </Button>
           </DialogFooter>
