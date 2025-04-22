@@ -13,14 +13,14 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20 p-4">
-      <Card className={`w-full ${isMobile ? 'max-w-[95%]' : 'max-w-md'} p-4 sm:p-6 animate-fade-in shadow-lg`}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-white to-purple-50 p-4">
+      <div className={`w-full ${isMobile ? 'max-w-[95%]' : 'max-w-md'}`}>
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-primary">{title}</h1>
-          <p className="text-gray-500 mt-1">{subtitle}</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">{title}</h1>
+          <p className="text-gray-600 mt-2">{subtitle}</p>
         </div>
         {children}
-      </Card>
+      </div>
     </div>
   );
 };
