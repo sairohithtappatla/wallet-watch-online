@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +44,17 @@ const TransferFundsForm = ({
     toWalletId: "",
     amount: 0,
   });
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen && wallets.length >= 2) {
+      setFormData({
+        fromWalletId: wallets[0]?.id || "",
+        toWalletId: wallets.length > 1 ? wallets[1]?.id || "" : "",
+        amount: 0,
+      });
+    }
+  }, [isOpen, wallets]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -141,9 +152,9 @@ const TransferFundsForm = ({
                 name="amount"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 max={maxAmount.toString()}
-                value={formData.amount}
+                value={formData.amount || ""}
                 onChange={handleInputChange}
                 className="col-span-3"
                 required

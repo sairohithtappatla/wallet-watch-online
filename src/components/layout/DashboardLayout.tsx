@@ -6,6 +6,7 @@ import MobileFooter from "./MobileFooter";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,6 +16,78 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const { user } = useAuth();
   const [userName, setUserName] = useState("User");
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Check for spending thresholds
+  useEffect(() => {
+    const checkDailySpending = async () => {
+      if (!user) return;
+      
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Check daily spending
+        const { data: dailyExpenses, error: dailyError } = await supabase
+          .from('expenses')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('date', today.toISOString())
+          .lt('amount', 0); // Negative amounts are expenses
+        
+        if (dailyError) {
+          console.error('Error fetching daily expenses:', dailyError);
+          return;
+        }
+        
+        // Calculate total daily spending (convert to positive for display)
+        const dailyTotal = dailyExpenses?.reduce((sum, expense) => 
+          sum + Math.abs(Number(expense.amount)), 0) || 0;
+        
+        if (dailyTotal > 500) {
+          toast({
+            title: "Daily Spending Alert",
+            description: `You've spent ₹${dailyTotal.toFixed(2)} today, which exceeds your ₹500 daily threshold.`,
+            variant: "destructive"
+          });
+        }
+        
+        // Check weekly spending
+        const lastWeek = new Date();
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        
+        const { data: weeklyExpenses, error: weeklyError } = await supabase
+          .from('expenses')
+          .select('amount')
+          .eq('user_id', user.id)
+          .gte('date', lastWeek.toISOString())
+          .lt('amount', 0); // Negative amounts are expenses
+        
+        if (weeklyError) {
+          console.error('Error fetching weekly expenses:', weeklyError);
+          return;
+        }
+        
+        // Calculate total weekly spending (convert to positive for display)
+        const weeklyTotal = weeklyExpenses?.reduce((sum, expense) => 
+          sum + Math.abs(Number(expense.amount)), 0) || 0;
+        
+        if (weeklyTotal > 2000) {
+          toast({
+            title: "Weekly Spending Alert",
+            description: `You've spent ₹${weeklyTotal.toFixed(2)} this week, which exceeds your ₹2000 weekly threshold.`,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check spending thresholds:', error);
+      }
+    };
+    
+    // Only check spending on initial load to avoid too many notifications
+    if (user) {
+      checkDailySpending();
+    }
+  }, [user, toast]);
   
   useEffect(() => {
     const fetchUserProfile = async () => {

@@ -42,7 +42,29 @@ const Wallets = () => {
           return;
         }
         
-        setWallets(data || []);
+        if (data && data.length === 0) {
+          // Create default INR wallets for new users
+          const defaultWallets = [
+            { name: "Cash", balance: 2000, currency: "INR", user_id: user.id },
+            { name: "Bank", balance: 10000, currency: "INR", user_id: user.id },
+            { name: "Savings", balance: 50000, currency: "INR", user_id: user.id },
+          ];
+          
+          try {
+            const { data: newWallets, error: insertError } = await supabase
+              .from('wallets')
+              .insert(defaultWallets)
+              .select();
+              
+            if (insertError) throw insertError;
+            
+            setWallets(newWallets || []);
+          } catch (insertErr) {
+            console.error('Error creating default wallets:', insertErr);
+          }
+        } else {
+          setWallets(data || []);
+        }
       } catch (error) {
         console.error('Failed to fetch wallets:', error);
         toast({
@@ -79,7 +101,7 @@ const Wallets = () => {
       const newWalletData = {
         name: walletData.name,
         balance: walletData.balance,
-        currency: walletData.currency,
+        currency: walletData.currency || "INR", // Default to INR
         user_id: user.id
       };
       
@@ -117,7 +139,7 @@ const Wallets = () => {
       const updateData = {
         name: walletData.name,
         balance: walletData.balance,
-        currency: walletData.currency,
+        currency: walletData.currency || "INR", // Default to INR if none provided
         updated_at: new Date().toISOString()
       };
       
@@ -131,6 +153,7 @@ const Wallets = () => {
         throw error;
       }
       
+      // Update local state with the updated wallet data
       setWallets(
         wallets.map((wallet) =>
           wallet.id === walletData.id
@@ -138,6 +161,7 @@ const Wallets = () => {
             : wallet
         )
       );
+      
       setIsFormOpen(false);
       setEditingWallet(null);
       toast({
@@ -234,7 +258,7 @@ const Wallets = () => {
       setIsTransferOpen(false);
       toast({
         title: "Funds Transferred",
-        description: `Successfully transferred funds between wallets.`,
+        description: `Successfully transferred ₹${amount} between wallets.`,
       });
     } catch (error: any) {
       console.error('Error transferring funds:', error);
@@ -293,7 +317,7 @@ const Wallets = () => {
                 id={wallet.id}
                 name={wallet.name}
                 balance={wallet.balance}
-                currency={wallet.currency}
+                currency={wallet.currency || "INR"}
                 onEdit={openEditWalletForm}
                 onDelete={handleDeleteWallet}
               />

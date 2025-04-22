@@ -22,14 +22,20 @@ export interface WalletProps {
 
 const WalletCard = ({ id, name, balance, currency, onEdit, onDelete }: WalletProps) => {
   const [isHovered, setIsHovered] = useState(false);
-
+  
+  // Improved hover responsiveness by using pointer events instead of just mouse events
+  const handlePointerEnter = () => setIsHovered(true);
+  const handlePointerLeave = () => setIsHovered(false);
+  
   return (
     <Card 
       className={`h-44 transition-all duration-200 ${
         isHovered ? "shadow-lg transform -translate-y-1" : "shadow"
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
+      onTouchStart={handlePointerEnter}
+      onTouchEnd={handlePointerLeave}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg font-medium flex items-center gap-2">
