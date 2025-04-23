@@ -1,7 +1,8 @@
+
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Bell } from "lucide-react";
+import { Menu, Bell, User, CreditCard, Settings, Loader2 } from "lucide-react";
 import Sidebar from "./Sidebar";
 import {
   DropdownMenu,

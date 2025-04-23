@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -7,7 +8,19 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ErrorProvider } from "@/contexts/ErrorContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+
+// Import all page components
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import Wallets from "@/pages/Wallets";
+import Expenses from "@/pages/Expenses";
+import Transactions from "@/pages/Transactions";
+import Analysis from "@/pages/Analysis";
+import Settings from "@/pages/Settings";
+import ErrorPage from "@/pages/ErrorPage";
 import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
+import NotFound from "@/pages/NotFound";
 
 const ProtectedRoute = () => {
   const { user, isLoading } = useAuth();
@@ -107,7 +120,7 @@ const AppContent = () => {
         />
       } />
       
-      <Route path="*" element={<ErrorPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -19,11 +20,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Extend the ExpenseCard props to include amountDisplay
+interface TransactionProps extends ExpenseFormData {
+  walletName: string;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [wallets] = useState([]);
+  const [transactions, setTransactions] = useState<TransactionProps[]>([]);
+  const [wallets] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionProps | null>(null);
   const [filterType, setFilterType] = useState("all");
   const [filterWallet, setFilterWallet] = useState("all");
   const { toast } = useToast();
@@ -50,7 +58,7 @@ const Transactions = () => {
       return;
     }
     
-    const newTransaction = {
+    const newTransaction: TransactionProps = {
       id: generateId(),
       ...transactionData,
       walletName: wallet.name,
@@ -113,6 +121,13 @@ const Transactions = () => {
     }
   };
 
+  // Format currency to Indian Rupees
+  const formatToRupees = (amount: number) => {
+    return `₹${Number(amount)
+      .toFixed(2)
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -173,9 +188,7 @@ const Transactions = () => {
               {...transaction}
               onEdit={openEditTransactionForm}
               onDelete={handleDeleteTransaction}
-              amountDisplay={`��${Number(transaction.amount)
-                .toFixed(2)
-                .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
+              amountDisplay={formatToRupees(transaction.amount)}
             />
           ))}
         </div>
