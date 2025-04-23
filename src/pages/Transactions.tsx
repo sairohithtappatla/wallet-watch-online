@@ -22,6 +22,7 @@ import {
 
 // Extend the ExpenseCard props to include amountDisplay
 interface TransactionProps extends ExpenseFormData {
+  id: string; // Make id required to match ExpenseProps
   walletName: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -72,6 +73,17 @@ const Transactions = () => {
       title: "Success",
       description: "Transaction has been added successfully.",
     });
+    
+    // Dispatch notification for high expense
+    if (transactionData.type === "expense" && transactionData.amount > 5000) {
+      window.dispatchEvent(
+        new CustomEvent("expense-alert", {
+          detail: {
+            message: `High expense of ₹${transactionData.amount.toLocaleString('en-IN')} detected in ${wallet.name}`,
+          },
+        })
+      );
+    }
   };
 
   const handleEditTransaction = (transactionData: ExpenseFormData) => {
@@ -91,7 +103,8 @@ const Transactions = () => {
         transaction.id === transactionData.id
           ? { 
               ...transaction, 
-              ...transactionData, 
+              ...transactionData,
+              id: transaction.id, // Ensure id is preserved
               walletName: wallet.name 
             }
           : transaction

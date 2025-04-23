@@ -14,9 +14,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const illustrationUrl =
-  "/lovable-uploads/0849a869-9b68-4dc6-b283-d2e6f7c4d618.png";
-
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +63,6 @@ const LoginForm = () => {
     <AuthLayout
       title="Welcome Back! 🔐"
       subtitle="Sign in to access your Indian wallet universe."
-      illustrationUrl={illustrationUrl}
     >
       <div className="space-y-8">
         {authError && (

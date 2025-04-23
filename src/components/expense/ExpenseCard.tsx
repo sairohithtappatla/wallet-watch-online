@@ -30,7 +30,7 @@ export interface ExpenseProps {
   walletId: string;
   walletName: string;
   type: ExpenseType;
-  amountDisplay?: string; // Added amountDisplay as optional prop
+  amountDisplay?: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }

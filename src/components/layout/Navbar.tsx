@@ -46,9 +46,9 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
   const { toast } = useToast();
   const { notifications, clearNotifications, addNotification } = useNotifications();
 
-  // Move app toast notifications to notifications bell
+  // Listen for both app notifications and expense alert notifications
   useEffect(() => {
-    const handler = (event: any) => {
+    const handleAppNotification = (event: any) => {
       if (event.detail && event.detail.title) {
         addNotification({
           title: event.detail.title,
@@ -57,8 +57,26 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
         });
       }
     };
-    window.addEventListener("wwAppNotification", handler);
-    return () => window.removeEventListener("wwAppNotification", handler);
+    
+    // Listen for expense alerts
+    const handleExpenseAlert = (event: any) => {
+      if (event.detail && event.detail.message) {
+        addNotification({
+          title: "Expense Alert",
+          description: event.detail.message,
+          createdAt: new Date().toISOString(),
+          type: 'alert'
+        });
+      }
+    };
+    
+    window.addEventListener("wwAppNotification", handleAppNotification);
+    window.addEventListener("expense-alert", handleExpenseAlert);
+    
+    return () => {
+      window.removeEventListener("wwAppNotification", handleAppNotification);
+      window.removeEventListener("expense-alert", handleExpenseAlert);
+    };
   }, [addNotification]);
 
   const handleLogout = async () => {

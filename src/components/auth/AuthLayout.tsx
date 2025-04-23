@@ -9,29 +9,15 @@ interface AuthLayoutProps {
   illustrationUrl?: string;
 }
 
-const defaultIllustration =
-  "/lovable-uploads/0849a869-9b68-4dc6-b283-d2e6f7c4d618.png";
 const AuthLayout = ({
   children,
   title,
   subtitle,
-  illustrationUrl,
 }: AuthLayoutProps) => {
   const isMobile = useIsMobile();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-fuchsia-100 via-purple-50 to-blue-50 p-2 relative overflow-hidden">
       <div className="absolute left-0 top-0 h-[30vh] w-full bg-gradient-to-r from-[#ffdae6]/40 via-violet-200/50 to-sky-100/60 rounded-b-3xl blur-2xl pointer-events-none" />
-      {/* Illustration */}
-      <div className="absolute top-4 right-4 z-10">
-        {!isMobile && (
-          <img
-            src={illustrationUrl || defaultIllustration}
-            alt="Finance Illustration"
-            className="w-80 h-80 object-contain drop-shadow-lg brightness-95"
-            draggable={false}
-          />
-        )}
-      </div>
       <main
         className={`relative z-20 w-full flex flex-col items-center mt-8 sm:mt-0 ${isMobile ? "max-w-[98%]" : "max-w-md"
           }`}
