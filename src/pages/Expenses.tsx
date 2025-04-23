@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ const Expenses = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Listen for custom event to open expense form
   useEffect(() => {
     const handleOpenExpenseForm = () => {
       setIsFormOpen(true);
@@ -33,14 +31,12 @@ const Expenses = () => {
     };
   }, []);
 
-  // Fetch wallets and expenses from Supabase
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       
       setLoading(true);
       try {
-        // Fetch wallets
         const { data: walletsData, error: walletsError } = await supabase
           .from('wallets')
           .select('*')
@@ -48,7 +44,6 @@ const Expenses = () => {
         
         if (walletsError) throw walletsError;
         
-        // If no wallets, create default wallets
         if (!walletsData || walletsData.length === 0) {
           const defaultWallets = [
             { name: "Cash", balance: 850, currency: "USD", user_id: user.id },
@@ -70,7 +65,6 @@ const Expenses = () => {
           setWallets(walletsData);
         }
         
-        // Fetch expenses
         const { data: expensesData, error: expensesError } = await supabase
           .from('expenses')
           .select(`
@@ -89,11 +83,10 @@ const Expenses = () => {
         
         if (expensesError) throw expensesError;
         
-        // Format expenses for display
         const formattedExpenses = expensesData?.map(expense => ({
           id: expense.id,
           amount: Number(expense.amount),
-          currency: "USD", // This could be fetched from the wallet
+          currency: "USD",
           description: expense.description || "",
           category: expense.category || "Other",
           date: new Date(expense.date).toISOString().split('T')[0],
@@ -120,11 +113,9 @@ const Expenses = () => {
     fetchData();
   }, [user, toast]);
 
-  // Group expenses by date
   const groupedExpenses = groupExpensesByDate(expenses);
   const sortedDates = Object.keys(groupedExpenses).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  // Handler for adding a new expense
   const handleAddExpense = async (expenseData: ExpenseFormData) => {
     if (!user) return;
     
@@ -140,10 +131,8 @@ const Expenses = () => {
     }
     
     try {
-      // Calculate amount based on type
       const amount = expenseData.type === 'expense' ? -Math.abs(expenseData.amount) : Math.abs(expenseData.amount);
       
-      // Insert new expense to Supabase
       const { data: newExpense, error } = await supabase
         .from('expenses')
         .insert({
@@ -169,13 +158,11 @@ const Expenses = () => {
       
       if (error) throw error;
       
-      // Update wallet balance
       await supabase
         .from('wallets')
         .update({ balance: wallet.balance + Number(amount) })
         .eq('id', wallet.id);
       
-      // Update UI with new expense
       const formattedExpense: ExpenseProps = {
         id: newExpense.id,
         amount: Math.abs(Number(newExpense.amount)),
@@ -193,7 +180,6 @@ const Expenses = () => {
       setExpenses([formattedExpense, ...expenses]);
       setIsFormOpen(false);
       
-      // Update wallets with new balance
       setWallets(wallets.map(w => 
         w.id === wallet.id 
           ? { ...w, balance: w.balance + Number(amount) } 
@@ -214,7 +200,6 @@ const Expenses = () => {
     }
   };
 
-  // Handler for editing an expense
   const handleEditExpense = async (expenseData: ExpenseFormData) => {
     if (!user || !expenseData.id) return;
     
@@ -230,7 +215,6 @@ const Expenses = () => {
     }
     
     try {
-      // Find original expense to calculate balance change
       const originalExpense = expenses.find(e => e.id === expenseData.id);
       if (!originalExpense) throw new Error("Original expense not found");
       
@@ -238,15 +222,12 @@ const Expenses = () => {
         ? -Math.abs(originalExpense.amount) 
         : Math.abs(originalExpense.amount);
       
-      // Calculate new amount based on type
       const newAmount = expenseData.type === 'expense' 
         ? -Math.abs(expenseData.amount) 
         : Math.abs(expenseData.amount);
       
-      // Calculate balance change
       const balanceChange = newAmount - originalAmount;
       
-      // Update expense in Supabase
       const { data: updatedExpense, error } = await supabase
         .from('expenses')
         .update({
@@ -273,21 +254,18 @@ const Expenses = () => {
       
       if (error) throw error;
       
-      // Update wallet balance if wallet didn't change
       if (originalExpense.walletId === expenseData.walletId) {
         await supabase
           .from('wallets')
           .update({ balance: wallet.balance + balanceChange })
           .eq('id', wallet.id);
           
-        // Update wallets with new balance
         setWallets(wallets.map(w => 
           w.id === wallet.id 
             ? { ...w, balance: w.balance + balanceChange } 
             : w
         ));
       } else {
-        // If wallet changed, update both old and new wallet balances
         const oldWallet = wallets.find(w => w.id === originalExpense.walletId);
         
         if (oldWallet) {
@@ -301,7 +279,6 @@ const Expenses = () => {
             .update({ balance: wallet.balance + newAmount })
             .eq('id', wallet.id);
             
-          // Update wallets with new balances
           setWallets(wallets.map(w => {
             if (w.id === oldWallet.id) return { ...w, balance: w.balance - originalAmount };
             if (w.id === wallet.id) return { ...w, balance: w.balance + newAmount };
@@ -310,7 +287,6 @@ const Expenses = () => {
         }
       }
       
-      // Update UI with edited expense
       const formattedExpense: ExpenseProps = {
         id: updatedExpense.id,
         amount: Math.abs(Number(updatedExpense.amount)),
@@ -346,12 +322,10 @@ const Expenses = () => {
     }
   };
 
-  // Handler for deleting an expense
   const handleDeleteExpense = async (id: string) => {
     if (!user) return;
     
     try {
-      // Find expense to calculate balance change
       const expenseToDelete = expenses.find(e => e.id === id);
       if (!expenseToDelete) throw new Error("Expense not found");
       
@@ -362,7 +336,6 @@ const Expenses = () => {
         ? -Math.abs(expenseToDelete.amount) 
         : Math.abs(expenseToDelete.amount);
       
-      // Delete expense from Supabase
       const { error } = await supabase
         .from('expenses')
         .delete()
@@ -371,16 +344,13 @@ const Expenses = () => {
       
       if (error) throw error;
       
-      // Update wallet balance
       await supabase
         .from('wallets')
         .update({ balance: wallet.balance - amount })
         .eq('id', wallet.id);
       
-      // Update UI
       setExpenses(expenses.filter(expense => expense.id !== id));
       
-      // Update wallets with new balance
       setWallets(wallets.map(w => 
         w.id === wallet.id 
           ? { ...w, balance: w.balance - amount } 
@@ -401,7 +371,6 @@ const Expenses = () => {
     }
   };
 
-  // Open the edit expense form
   const openEditExpenseForm = (id: string) => {
     const expenseToEdit = expenses.find((expense) => expense.id === id);
     if (expenseToEdit) {
@@ -462,6 +431,9 @@ const Expenses = () => {
                   {...expense}
                   onEdit={openEditExpenseForm}
                   onDelete={handleDeleteExpense}
+                  amountDisplay={`₹${Number(expense.amount)
+                    .toFixed(2)
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
                 />
               ))}
             </div>
@@ -478,7 +450,6 @@ const Expenses = () => {
         </div>
       )}
 
-      {/* Expense Form Modal */}
       <ExpenseForm
         isOpen={isFormOpen}
         onClose={() => {

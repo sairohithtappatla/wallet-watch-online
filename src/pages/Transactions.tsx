@@ -173,6 +173,9 @@ const Transactions = () => {
               {...transaction}
               onEdit={openEditTransactionForm}
               onDelete={handleDeleteTransaction}
+              amountDisplay={`��${Number(transaction.amount)
+                .toFixed(2)
+                .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`}
             />
           ))}
         </div>

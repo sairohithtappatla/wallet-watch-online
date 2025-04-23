@@ -1,7 +1,7 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Bell, CreditCard, PlusCircle, Settings, User, Loader2 } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 import Sidebar from "./Sidebar";
 import {
   DropdownMenu,
@@ -15,14 +15,18 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-// Simple notification store (could be made global/context if needed)
+// Notification state using localStorage for persistence
 const useNotifications = () => {
-  // Example: notifications stored as state for UI demo purposes (replace with db/fetch for real app)
-  const [notifications, setNotifications] = useState([
-    // Start with empty or fetch from API accordingly
-  ]);
+  const [notifications, setNotifications] = useState(() => {
+    const stored = localStorage.getItem("WW_Notifications");
+    return stored ? JSON.parse(stored) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("WW_Notifications", JSON.stringify(notifications));
+  }, [notifications]);
+
   const addNotification = (notif) => setNotifications((prev) => [notif, ...prev]);
   const clearNotifications = () => setNotifications([]);
   return { notifications, addNotification, clearNotifications };
@@ -34,11 +38,27 @@ interface NavbarProps {
   avatarUrl?: string;
 }
 
+// Listen for in-app notifications via toast, move them to bell icon
 const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const { toast } = useToast();
-  const { notifications, clearNotifications } = useNotifications();
+  const { notifications, clearNotifications, addNotification } = useNotifications();
+
+  // Move app toast notifications to notifications bell
+  useEffect(() => {
+    const handler = (event: any) => {
+      if (event.detail && event.detail.title) {
+        addNotification({
+          title: event.detail.title,
+          description: event.detail.description,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    };
+    window.addEventListener("wwAppNotification", handler);
+    return () => window.removeEventListener("wwAppNotification", handler);
+  }, [addNotification]);
 
   const handleLogout = async () => {
     try {
@@ -83,16 +103,12 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
           </div>
         </Link>
         <div className="flex items-center gap-4">
-
-          {/* Notification Bell with Drop-down */}
+          {/* Bell icon notification center */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full relative">
-                {/* bell-dot for unread, use counter for count */}
                 <span className="relative">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M15 17h5l-1.405-1.405C18.218 15.37 18 14.7 18 14V11c0-3.07-2.13-5.64-5-6.32V4a1 1 0 10-2 0v.68C8.13 5.36 6 7.92 6 11v3c0 .7-.218 1.37-.595 1.595L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9" />
-                  </svg>
+                  <Bell className="h-5 w-5 text-purple-600" />
                   {notifications.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-pink-500 rounded-full h-4 w-4 text-xs flex items-center justify-center text-white animate-bounce">
                       {notifications.length}
@@ -101,36 +117,47 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 z-50 bg-white border">
-              <DropdownMenuLabel>
-                Notifications
+            <DropdownMenuContent align="end" className="w-72 z-50 bg-white border overflow-hidden shadow-lg">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Notifications</span>
                 {notifications.length > 0 && (
                   <button
                     onClick={clearNotifications}
-                    className="float-right text-xs text-purple-600 hover:underline"
+                    className="text-xs text-purple-600 hover:underline ml-auto"
                   >
                     Clear all
                   </button>
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="max-h-60 overflow-y-auto flex flex-col divide-y">
+              <div className="max-h-64 overflow-y-auto flex flex-col divide-y">
                 {notifications.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     No new notifications
                   </div>
                 ) : (
                   notifications.map((notif, idx) => (
-                    <div key={idx} className="px-4 py-2 text-sm text-gray-700">
-                      <span className="font-medium text-purple-600">{notif.title}</span>
-                      <div className="text-xs text-gray-500">{notif.description}</div>
+                    <div key={idx} className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-fuchsia-600" />
+                        <span className="font-medium text-fuchsia-700">
+                          {notif.title}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 ml-6">
+                        {notif.description}
+                        <div className="mt-1 text-[10px] text-gray-400">
+                          {notif.createdAt
+                            ? new Date(notif.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                            : ""}
+                        </div>
+                      </div>
                     </div>
                   ))
                 )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-
           {/* Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

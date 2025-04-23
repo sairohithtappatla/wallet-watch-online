@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,9 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+const illustrationUrl =
+  "/lovable-uploads/0849a869-9b68-4dc6-b283-d2e6f7c4d618.png";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -27,9 +31,18 @@ const LoginForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
-    
+
     try {
       await signIn(email, password);
+      // Raise an event for in-app notifications
+      window.dispatchEvent(
+        new CustomEvent("wwAppNotification", {
+          detail: {
+            title: "Sign-in successful",
+            description: "Welcome back to Wallet Watch.",
+          },
+        })
+      );
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
@@ -51,39 +64,40 @@ const LoginForm = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back, Financier"
-      subtitle="Enter your details to access your wallet universe."
+      title="Welcome Back! 🔐"
+      subtitle="Sign in to access your Indian wallet universe."
+      illustrationUrl={illustrationUrl}
     >
-      <div className="w-full max-w-lg mx-auto space-y-8 p-8 rounded-2xl border shadow-2xl bg-gradient-to-br from-white/90 to-fuchsia-50/60 backdrop-blur-2xl animate-fade-in relative">
+      <div className="space-y-8">
         {authError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{authError}</AlertDescription>
           </Alert>
         )}
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="you@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="w-full bg-white/70 border-fuchsia-200 focus-visible:ring-fuchsia-400"
+              className="w-full bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
               autoComplete="email"
             />
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Link
                 to="/forgot-password"
-                className="text-sm font-medium text-fuchsia-600 hover:text-fuchsia-700 hover:underline"
+                className="text-xs font-semibold text-fuchsia-600 hover:text-fuchsia-800 hover:underline"
               >
                 Forgot password?
               </Link>
@@ -96,14 +110,14 @@ const LoginForm = () => {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               required
-              className="w-full bg-white/70 border-fuchsia-200 focus-visible:ring-fuchsia-400"
+              className="w-full bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
               autoComplete="current-password"
             />
           </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white shadow-lg shadow-purple-200 transition-all duration-200"
+
+          <Button
+            type="submit"
+            className="w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-700 hover:to-violet-700 text-white shadow-purple-200 shadow transition-all duration-200"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -115,29 +129,36 @@ const LoginForm = () => {
             )}
           </Button>
         </form>
-        
+
         <div className="relative">
           <Separator className="my-4" />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none ">
-            <span className="bg-white/80 px-4 text-xs text-fuchsia-500 font-medium shadow rounded-full">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="bg-white/70 px-4 text-xs text-fuchsia-500 font-semibold shadow rounded-full">
               OR CONTINUE WITH
             </span>
           </div>
         </div>
-        
-        <Button 
+
+        <Button
           type="button"
-          variant="outline" 
-          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200" 
+          variant="outline"
+          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200"
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
           <FcGoogle className="mr-2 h-5 w-5" /> Sign in with Google
         </Button>
-        
-        <div className={`text-center text-base mt-8 ${isMobile ? 'pb-4' : ''}`}>
+
+        <div
+          className={`text-center text-base mt-8 ${isMobile ? "pb-3" : ""}`}
+        >
           Need an account?{" "}
-          <Link to="/register" className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline">Register now</Link>
+          <Link
+            to="/register"
+            className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline"
+          >
+            Register now
+          </Link>
         </div>
       </div>
     </AuthLayout>
