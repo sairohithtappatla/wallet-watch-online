@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -59,10 +58,10 @@ const RegisterForm = () => {
 
   return (
     <AuthLayout
-      title="Create Account"
-      subtitle="Start managing your finances today"
+      title="Sign Up — Join Wallet Watch"
+      subtitle="Your next-level financial journey starts here."
     >
-      <div className="w-full max-w-md mx-auto space-y-6 p-6 bg-gradient-to-br from-white to-purple-50 rounded-lg shadow-xl animate-fade-in">
+      <div className="w-full max-w-lg mx-auto space-y-8 p-8 rounded-2xl border shadow-2xl bg-gradient-to-br from-white/90 to-fuchsia-50/60 backdrop-blur-2xl animate-fade-in relative">
         {authError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -70,7 +69,7 @@ const RegisterForm = () => {
           </Alert>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
@@ -157,8 +156,8 @@ const RegisterForm = () => {
 
         <div className="relative">
           <Separator className="my-4" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="bg-white px-2 text-xs text-gray-500">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="bg-white/80 px-4 text-xs text-fuchsia-500 font-medium shadow rounded-full">
               OR CONTINUE WITH
             </span>
           </div>
@@ -167,18 +166,16 @@ const RegisterForm = () => {
         <Button 
           type="button"
           variant="outline" 
-          className="w-full border-purple-100 hover:bg-purple-50 transition-all duration-200" 
+          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200" 
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
           <FcGoogle className="mr-2 h-5 w-5" /> Sign up with Google
         </Button>
 
-        <div className={`text-center text-sm mt-6 ${isMobile ? 'pb-4' : ''}`}>
+        <div className={`text-center text-base mt-8 ${isMobile ? 'pb-4' : ''}`}>
           Already have an account?{" "}
-          <Link to="/login" className="text-purple-600 font-medium hover:text-purple-700 hover:underline">
-            Sign in
-          </Link>
+          <Link to="/login" className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline">Sign in</Link>
         </div>
       </div>
     </AuthLayout>

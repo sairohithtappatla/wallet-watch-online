@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -20,93 +19,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Mock data
-const initialWallets = [
-  { id: "w1", name: "Cash", balance: 850, currency: "USD" },
-  { id: "w2", name: "Bank", balance: 3500, currency: "USD" },
-  { id: "w3", name: "Savings", balance: 12000, currency: "USD" },
-];
-
-const initialTransactions = [
-  {
-    id: "e1",
-    amount: 125,
-    currency: "USD",
-    description: "Grocery Shopping",
-    category: "Food",
-    date: "2025-04-08",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e2",
-    amount: 2500,
-    currency: "USD",
-    description: "Monthly Salary",
-    category: "Salary",
-    date: "2025-04-01",
-    walletId: "w2",
-    walletName: "Bank",
-    type: "income" as const,
-  },
-  {
-    id: "e3",
-    amount: 50,
-    currency: "USD",
-    description: "Movie Night",
-    category: "Entertainment",
-    date: "2025-04-05",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e4",
-    amount: 75,
-    currency: "USD",
-    description: "Shopping",
-    category: "Shopping",
-    date: "2025-04-03",
-    walletId: "w1",
-    walletName: "Cash",
-    type: "expense" as const,
-  },
-  {
-    id: "e5",
-    amount: 30,
-    currency: "USD",
-    description: "Gas",
-    category: "Transport",
-    date: "2025-04-07",
-    walletId: "w2",
-    walletName: "Bank",
-    type: "expense" as const,
-  },
-];
-
 const Transactions = () => {
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [wallets] = useState(initialWallets);
+  const [transactions, setTransactions] = useState([]);
+  const [wallets] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<ExpenseFormData | null>(null);
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterWallet, setFilterWallet] = useState<string>("all");
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [filterType, setFilterType] = useState("all");
+  const [filterWallet, setFilterWallet] = useState("all");
   const { toast } = useToast();
 
-  // Filter transactions based on selected filters
   const filteredTransactions = transactions.filter((transaction) => {
     const typeMatch = filterType === "all" || transaction.type === filterType;
     const walletMatch = filterWallet === "all" || transaction.walletId === filterWallet;
     return typeMatch && walletMatch;
   });
 
-  // Sort transactions by date (newest first)
   const sortedTransactions = [...filteredTransactions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  // Handler for adding a new transaction
   const handleAddTransaction = (transactionData: ExpenseFormData) => {
     const wallet = wallets.find((w) => w.id === transactionData.walletId);
     
@@ -135,7 +66,6 @@ const Transactions = () => {
     });
   };
 
-  // Handler for editing a transaction
   const handleEditTransaction = (transactionData: ExpenseFormData) => {
     const wallet = wallets.find((w) => w.id === transactionData.walletId);
     
@@ -167,7 +97,6 @@ const Transactions = () => {
     });
   };
 
-  // Handler for deleting a transaction
   const handleDeleteTransaction = (id: string) => {
     setTransactions(transactions.filter((transaction) => transaction.id !== id));
     toast({
@@ -176,7 +105,6 @@ const Transactions = () => {
     });
   };
 
-  // Open the edit transaction form
   const openEditTransactionForm = (id: string) => {
     const transactionToEdit = transactions.find((transaction) => transaction.id === id);
     if (transactionToEdit) {
@@ -259,7 +187,6 @@ const Transactions = () => {
         </div>
       )}
 
-      {/* Transaction Form Modal */}
       <ExpenseForm
         isOpen={isFormOpen}
         onClose={() => {

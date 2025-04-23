@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,10 +51,10 @@ const LoginForm = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Log in to your account to continue"
+      title="Welcome Back, Financier"
+      subtitle="Enter your details to access your wallet universe."
     >
-      <div className="w-full max-w-md mx-auto space-y-6 p-6 bg-gradient-to-br from-white to-purple-50 rounded-lg shadow-xl animate-fade-in">
+      <div className="w-full max-w-lg mx-auto space-y-8 p-8 rounded-2xl border shadow-2xl bg-gradient-to-br from-white/90 to-fuchsia-50/60 backdrop-blur-2xl animate-fade-in relative">
         {authError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -63,7 +62,7 @@ const LoginForm = () => {
           </Alert>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -74,7 +73,7 @@ const LoginForm = () => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={isLoading}
               required
-              className="w-full bg-white/50 backdrop-blur-sm border-purple-100 focus-visible:ring-purple-400"
+              className="w-full bg-white/70 border-fuchsia-200 focus-visible:ring-fuchsia-400"
               autoComplete="email"
             />
           </div>
@@ -84,7 +83,7 @@ const LoginForm = () => {
               <Label htmlFor="password">Password</Label>
               <Link
                 to="/forgot-password"
-                className="text-sm font-medium text-purple-600 hover:text-purple-700 hover:underline"
+                className="text-sm font-medium text-fuchsia-600 hover:text-fuchsia-700 hover:underline"
               >
                 Forgot password?
               </Link>
@@ -97,7 +96,7 @@ const LoginForm = () => {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
               required
-              className="w-full bg-white/50 backdrop-blur-sm border-purple-100 focus-visible:ring-purple-400"
+              className="w-full bg-white/70 border-fuchsia-200 focus-visible:ring-fuchsia-400"
               autoComplete="current-password"
             />
           </div>
@@ -119,8 +118,8 @@ const LoginForm = () => {
         
         <div className="relative">
           <Separator className="my-4" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="bg-white px-2 text-xs text-gray-500">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none ">
+            <span className="bg-white/80 px-4 text-xs text-fuchsia-500 font-medium shadow rounded-full">
               OR CONTINUE WITH
             </span>
           </div>
@@ -129,18 +128,16 @@ const LoginForm = () => {
         <Button 
           type="button"
           variant="outline" 
-          className="w-full border-purple-100 hover:bg-purple-50 transition-all duration-200" 
+          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200" 
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
           <FcGoogle className="mr-2 h-5 w-5" /> Sign in with Google
         </Button>
         
-        <div className={`text-center text-sm mt-6 ${isMobile ? 'pb-4' : ''}`}>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-purple-600 font-medium hover:text-purple-700 hover:underline">
-            Create an account
-          </Link>
+        <div className={`text-center text-base mt-8 ${isMobile ? 'pb-4' : ''}`}>
+          Need an account?{" "}
+          <Link to="/register" className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline">Register now</Link>
         </div>
       </div>
     </AuthLayout>
