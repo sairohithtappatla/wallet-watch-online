@@ -30,6 +30,7 @@ export interface ExpenseProps {
   walletId: string;
   walletName: string;
   type: ExpenseType;
+  amountDisplay?: string; // Added amountDisplay as optional prop
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -43,6 +44,7 @@ const ExpenseCard = ({
   date,
   walletName,
   type,
+  amountDisplay,
   onEdit,
   onDelete,
 }: ExpenseProps) => {
@@ -97,7 +99,7 @@ const ExpenseCard = ({
           )}
         </div>
         <span className={`font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}>
-          {isIncome ? "+" : "-"}{formatCurrency(amount, currency)}
+          {amountDisplay || (isIncome ? "+" : "-") + formatCurrency(amount, currency)}
         </span>
       </CardContent>
     </Card>
