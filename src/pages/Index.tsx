@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { PieChart, LineChart, Wallet, ShieldCheck } from "lucide-react";
@@ -48,7 +47,7 @@ const Index = () => {
                 Take Control of Your <span className="text-primary">Finances</span>
               </h1>
               <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
-                Track expenses, manage wallets, and analyze your spending with our secure and easy-to-use personal finance app.
+                Track expenses in <span className="font-semibold text-black/90">₹</span>, manage wallets, and analyze your spending with our secure and easy-to-use personal finance app.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">

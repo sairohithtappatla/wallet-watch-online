@@ -16,29 +16,28 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [userName, setUserName] = useState("User");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
+
   useEffect(() => {
     const checkDailySpending = async () => {
       if (!user) return;
       try {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const { data: dailyExpenses, error: dailyError } = await supabase
           .from('expenses')
           .select('amount')
           .eq('user_id', user.id)
           .gte('date', today.toISOString())
           .lt('amount', 0);
-        
+
         if (dailyError) {
           console.error('Error fetching daily expenses:', dailyError);
           return;
         }
-        
-        const dailyTotal = dailyExpenses?.reduce((sum, expense) => 
+        const dailyTotal = dailyExpenses?.reduce((sum, expense) =>
           sum + Math.abs(Number(expense.amount)), 0) || 0;
-        
+
         if (dailyTotal > 500) {
           window.dispatchEvent(
             new CustomEvent("wwAppNotification", {
@@ -49,25 +48,25 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             })
           );
         }
-        
+
         const lastWeek = new Date();
         lastWeek.setDate(lastWeek.getDate() - 7);
-        
+
         const { data: weeklyExpenses, error: weeklyError } = await supabase
           .from('expenses')
           .select('amount')
           .eq('user_id', user.id)
           .gte('date', lastWeek.toISOString())
           .lt('amount', 0);
-        
+
         if (weeklyError) {
           console.error('Error fetching weekly expenses:', weeklyError);
           return;
         }
-        
-        const weeklyTotal = weeklyExpenses?.reduce((sum, expense) => 
+
+        const weeklyTotal = weeklyExpenses?.reduce((sum, expense) =>
           sum + Math.abs(Number(expense.amount)), 0) || 0;
-        
+
         if (weeklyTotal > 2000) {
           window.dispatchEvent(
             new CustomEvent("wwAppNotification", {
@@ -82,12 +81,12 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         console.error('Failed to check spending thresholds:', error);
       }
     };
-    
+
     if (user) {
       checkDailySpending();
     }
   }, [user]);
-  
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user) {

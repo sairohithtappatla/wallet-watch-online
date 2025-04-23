@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,6 @@ import AuthLayout from "./AuthLayout";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Check } from "lucide-react";
-
-const illustrationUrl =
-  "/lovable-uploads/0849a869-9b68-4dc6-b283-d2e6f7c4d618.png";
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
@@ -46,11 +42,7 @@ const ForgotPasswordForm = () => {
   };
 
   return (
-    <AuthLayout
-      title="Forgot your password?"
-      subtitle="Enter your registered email and we'll send you a reset link."
-      illustrationUrl={illustrationUrl}
-    >
+    <AuthLayout title="Forgot your password?" subtitle="Enter your registered email and we'll send you a reset link.">
       <div className="space-y-8">
         {feedback && (
           <Alert variant={feedback.type === "error" ? "destructive" : "default"}>

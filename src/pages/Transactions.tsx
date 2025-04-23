@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -20,9 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Extend the ExpenseCard props to include amountDisplay
 interface TransactionProps extends ExpenseFormData {
-  id: string; // Make id required to match ExpenseProps
+  id: string;
   walletName: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -74,12 +72,11 @@ const Transactions = () => {
       description: "Transaction has been added successfully.",
     });
     
-    // Dispatch notification for high expense
     if (transactionData.type === "expense" && transactionData.amount > 5000) {
       window.dispatchEvent(
         new CustomEvent("expense-alert", {
           detail: {
-            message: `High expense of ₹${transactionData.amount.toLocaleString('en-IN')} detected in ${wallet.name}`,
+            message: `High expense of ₹${Number(transactionData.amount).toLocaleString('en-IN')} detected in ${wallet.name}`,
           },
         })
       );
@@ -104,7 +101,7 @@ const Transactions = () => {
           ? { 
               ...transaction, 
               ...transactionData,
-              id: transaction.id, // Ensure id is preserved
+              id: transaction.id,
               walletName: wallet.name 
             }
           : transaction
@@ -134,7 +131,6 @@ const Transactions = () => {
     }
   };
 
-  // Format currency to Indian Rupees
   const formatToRupees = (amount: number) => {
     return `₹${Number(amount)
       .toFixed(2)

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,6 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const illustrationUrl =
-  "/lovable-uploads/0849a869-9b68-4dc6-b283-d2e6f7c4d618.png";
 
 const RegisterForm = () => {
   const [firstName, setFirstName] = useState("");
@@ -69,11 +65,7 @@ const RegisterForm = () => {
   };
 
   return (
-    <AuthLayout
-      title="Sign Up to Wallet Watch"
-      subtitle="Create your account and manage your finances, Indian style. 🇮🇳"
-      illustrationUrl={illustrationUrl}
-    >
+    <AuthLayout title="Sign Up to Wallet Watch" subtitle="Create your account and manage your finances, Indian style. 🇮🇳">
       <div className="space-y-8">
         {authError && (
           <Alert variant="destructive">
