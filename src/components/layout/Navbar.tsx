@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -18,7 +17,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 
-// Notification state using localStorage for persistence
 const useNotifications = () => {
   const [notifications, setNotifications] = useState(() => {
     const stored = localStorage.getItem("WW_Notifications");
@@ -39,14 +37,12 @@ interface NavbarProps {
   avatarUrl?: string;
 }
 
-// Listen for in-app notifications via toast, move them to bell icon
 const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { toast } = useToast();
   const { notifications, clearNotifications, addNotification } = useNotifications();
 
-  // Listen for both app notifications and expense alert notifications
   useEffect(() => {
     const handleAppNotification = (event: any) => {
       if (event.detail && event.detail.title) {
@@ -58,7 +54,6 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
       }
     };
     
-    // Listen for expense alerts
     const handleExpenseAlert = (event: any) => {
       if (event.detail && event.detail.message) {
         addNotification({
@@ -121,24 +116,23 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
             Wallet Watch
           </div>
         </Link>
-        <div className="flex items-center gap-4">
-          {/* Bell icon notification center */}
+        <div className="flex items-center gap-2 sm:gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full relative">
                 <span className="relative">
                   <Bell className="h-5 w-5 text-purple-600" />
                   {notifications.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-pink-500 rounded-full h-4 w-4 text-xs flex items-center justify-center text-white animate-bounce">
+                    <span className="absolute -top-1 -right-1 bg-pink-500 rounded-full h-4 w-4 text-xs flex items-center justify-center text-white animate-pulse">
                       {notifications.length}
                     </span>
                   )}
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 z-50 bg-white border overflow-hidden shadow-lg">
-              <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Notifications</span>
+            <DropdownMenuContent align="end" sideOffset={8} className="w-80 max-w-xs sm:max-w-sm rounded-xl bg-white border overflow-hidden shadow-xl">
+              <DropdownMenuLabel className="flex items-center justify-between px-4 py-2">
+                <span className="font-semibold text-base sm:text-lg">Notifications</span>
                 {notifications.length > 0 && (
                   <button
                     onClick={clearNotifications}
@@ -149,21 +143,25 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
                 )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="max-h-64 overflow-y-auto flex flex-col divide-y">
+              <div className="max-h-96 min-h-[64px] overflow-y-auto flex flex-col divide-y">
                 {notifications.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground">
+                  <div className="p-6 text-center text-muted-foreground">
                     No new notifications
                   </div>
                 ) : (
                   notifications.map((notif, idx) => (
-                    <div key={idx} className="px-4 py-2">
+                    <div
+                      key={idx}
+                      className="px-4 py-3 flex flex-col gap-1 bg-white hover:bg-purple-50 transition duration-75"
+                      style={{ wordBreak: 'break-word' }}
+                    >
                       <div className="flex items-center gap-2">
-                        <Bell className="h-4 w-4 text-fuchsia-600" />
-                        <span className="font-medium text-fuchsia-700">
+                        <Bell className={`h-4 w-4 text-fuchsia-600`} />
+                        <span className="font-medium text-fuchsia-700 text-sm sm:text-base">
                           {notif.title}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 ml-6">
+                      <div className="text-xs text-gray-600 ml-6">
                         {notif.description}
                         <div className="mt-1 text-[10px] text-gray-400">
                           {notif.createdAt
@@ -177,7 +175,6 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* Profile Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">

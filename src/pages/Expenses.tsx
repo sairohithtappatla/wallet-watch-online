@@ -34,37 +34,14 @@ const Expenses = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
       setLoading(true);
       try {
         const { data: walletsData, error: walletsError } = await supabase
           .from('wallets')
           .select('*')
           .eq('user_id', user.id);
-        
         if (walletsError) throw walletsError;
-        
-        if (!walletsData || walletsData.length === 0) {
-          const defaultWallets = [
-            { name: "Cash", balance: 850, currency: "USD", user_id: user.id },
-            { name: "Bank", balance: 3500, currency: "USD", user_id: user.id },
-            { name: "Savings", balance: 12000, currency: "USD", user_id: user.id },
-          ];
-          
-          for (const wallet of defaultWallets) {
-            await supabase.from('wallets').insert(wallet);
-          }
-          
-          const { data: newWalletsData } = await supabase
-            .from('wallets')
-            .select('*')
-            .eq('user_id', user.id);
-            
-          setWallets(newWalletsData || []);
-        } else {
-          setWallets(walletsData);
-        }
-        
+        setWallets(walletsData || []);
         const { data: expensesData, error: expensesError } = await supabase
           .from('expenses')
           .select(`
@@ -80,13 +57,11 @@ const Expenses = () => {
           `)
           .eq('user_id', user.id)
           .order('date', { ascending: false });
-        
         if (expensesError) throw expensesError;
-        
         const formattedExpenses = expensesData?.map(expense => ({
           id: expense.id,
           amount: Number(expense.amount),
-          currency: "USD",
+          currency: "INR",
           description: expense.description || "",
           category: expense.category || "Other",
           date: new Date(expense.date).toISOString().split('T')[0],
@@ -96,7 +71,6 @@ const Expenses = () => {
           onEdit: () => {},
           onDelete: () => {},
         })) || [];
-        
         setExpenses(formattedExpenses);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -109,7 +83,6 @@ const Expenses = () => {
         setLoading(false);
       }
     };
-    
     fetchData();
   }, [user, toast]);
 

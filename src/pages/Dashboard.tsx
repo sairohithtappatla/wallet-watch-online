@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -24,7 +23,6 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch data from Supabase
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
@@ -32,7 +30,6 @@ const Dashboard = () => {
       try {
         setIsLoading(true);
         
-        // Fetch wallets
         const { data: walletsData, error: walletsError } = await supabase
           .from('wallets')
           .select('*')
@@ -43,7 +40,6 @@ const Dashboard = () => {
         
         setWallets(walletsData || []);
         
-        // Fetch expenses
         const { data: expensesData, error: expensesError } = await supabase
           .from('expenses')
           .select(`
@@ -64,11 +60,10 @@ const Dashboard = () => {
         
         if (expensesError) throw expensesError;
         
-        // Format expenses for display
         const formattedExpenses = expensesData?.map(expense => ({
           id: expense.id,
           amount: Math.abs(Number(expense.amount)),
-          currency: expense.wallets?.currency || "USD",
+          currency: "INR",
           description: expense.description || "",
           category: expense.category || "Other",
           date: new Date(expense.date).toISOString().split('T')[0],
@@ -95,10 +90,8 @@ const Dashboard = () => {
     fetchData();
   }, [user, toast]);
 
-  // Calculate total balance across all wallets
   const totalBalance = useMemo(() => calculateTotalBalance(wallets), [wallets]);
 
-  // Calculate total income and expenses
   const { totalIncome, totalExpense } = useMemo(() => {
     return expenses.reduce(
       (acc, curr) => {
@@ -113,7 +106,6 @@ const Dashboard = () => {
     );
   }, [expenses]);
 
-  // Quick action handlers
   const handleAddExpense = () => {
     navigate("/expenses");
     setTimeout(() => {
@@ -156,22 +148,22 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Balance"
-          value={formatCurrency(totalBalance, "USD")}
+          value={formatCurrency(totalBalance, "INR")}
           icon={<Wallet />}
         />
         <StatCard
           title="Income"
-          value={formatCurrency(totalIncome, "USD")}
+          value={formatCurrency(totalIncome, "INR")}
           icon={<TrendingUp />}
         />
         <StatCard
           title="Expenses"
-          value={formatCurrency(totalExpense, "USD")}
+          value={formatCurrency(totalExpense, "INR")}
           icon={<ArrowDownUp />}
         />
         <StatCard
           title="Total Savings"
-          value={formatCurrency(totalIncome - totalExpense, "USD")}
+          value={formatCurrency(totalIncome - totalExpense, "INR")}
           icon={<Activity />}
         />
       </div>
@@ -196,7 +188,7 @@ const Dashboard = () => {
                   id={wallet.id}
                   name={wallet.name}
                   balance={wallet.balance}
-                  currency={wallet.currency}
+                  currency="INR"
                   onEdit={() => {}}
                   onDelete={() => {}}
                 />

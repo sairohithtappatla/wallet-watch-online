@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -19,11 +18,9 @@ const Wallets = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Fetch wallets from Supabase
   useEffect(() => {
     const fetchWallets = async () => {
       if (!user) return;
-      
       try {
         setIsLoading(true);
         const { data, error } = await supabase
@@ -31,7 +28,6 @@ const Wallets = () => {
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-        
         if (error) {
           console.error('Error fetching wallets:', error);
           toast({
@@ -41,23 +37,18 @@ const Wallets = () => {
           });
           return;
         }
-        
         if (data && data.length === 0) {
-          // Create default INR wallets for new users
           const defaultWallets = [
             { name: "Cash", balance: 2000, currency: "INR", user_id: user.id },
             { name: "Bank", balance: 10000, currency: "INR", user_id: user.id },
             { name: "Savings", balance: 50000, currency: "INR", user_id: user.id },
           ];
-          
           try {
             const { data: newWallets, error: insertError } = await supabase
               .from('wallets')
               .insert(defaultWallets)
               .select();
-              
             if (insertError) throw insertError;
-            
             setWallets(newWallets || []);
           } catch (insertErr) {
             console.error('Error creating default wallets:', insertErr);
@@ -76,24 +67,19 @@ const Wallets = () => {
         setIsLoading(false);
       }
     };
-    
     fetchWallets();
   }, [user, toast]);
 
-  // Listen for custom event to open transfer form
   useEffect(() => {
     const handleOpenTransferForm = () => {
       setIsTransferOpen(true);
     };
-    
     window.addEventListener('open-transfer-form', handleOpenTransferForm);
-    
     return () => {
       window.removeEventListener('open-transfer-form', handleOpenTransferForm);
     };
   }, []);
 
-  // Handler for adding a new wallet
   const handleAddWallet = async (walletData: WalletFormData) => {
     if (!user) return;
 
@@ -101,7 +87,7 @@ const Wallets = () => {
       const newWalletData = {
         name: walletData.name,
         balance: walletData.balance,
-        currency: walletData.currency || "INR", // Default to INR
+        currency: walletData.currency || "INR",
         user_id: user.id
       };
       
@@ -131,7 +117,6 @@ const Wallets = () => {
     }
   };
 
-  // Handler for editing a wallet
   const handleEditWallet = async (walletData: WalletFormData) => {
     if (!user || !walletData.id) return;
     
@@ -139,7 +124,7 @@ const Wallets = () => {
       const updateData = {
         name: walletData.name,
         balance: walletData.balance,
-        currency: walletData.currency || "INR", // Default to INR if none provided
+        currency: walletData.currency || "INR",
         updated_at: new Date().toISOString()
       };
       
@@ -153,7 +138,6 @@ const Wallets = () => {
         throw error;
       }
       
-      // Update local state with the updated wallet data
       setWallets(
         wallets.map((wallet) =>
           wallet.id === walletData.id
@@ -178,7 +162,6 @@ const Wallets = () => {
     }
   };
 
-  // Handler for deleting a wallet
   const handleDeleteWallet = async (id: string) => {
     if (!user) return;
     
@@ -208,13 +191,11 @@ const Wallets = () => {
     }
   };
 
-  // Handler for transferring funds between wallets
   const handleTransferFunds = async (transferData: TransferFormData) => {
     if (!user) return;
     const { fromWalletId, toWalletId, amount } = transferData;
 
     try {
-      // Start a Supabase transaction
       const fromWallet = wallets.find(wallet => wallet.id === fromWalletId);
       const toWallet = wallets.find(wallet => wallet.id === toWalletId);
       
@@ -226,7 +207,6 @@ const Wallets = () => {
         throw new Error("Insufficient funds");
       }
       
-      // Update source wallet (reduce balance)
       const { error: fromError } = await supabase
         .from('wallets')
         .update({ balance: fromWallet.balance - amount })
@@ -235,7 +215,6 @@ const Wallets = () => {
       
       if (fromError) throw fromError;
       
-      // Update destination wallet (increase balance)
       const { error: toError } = await supabase
         .from('wallets')
         .update({ balance: toWallet.balance + amount })
@@ -244,7 +223,6 @@ const Wallets = () => {
       
       if (toError) throw toError;
       
-      // Update local state
       setWallets(wallets.map((wallet) => {
         if (wallet.id === fromWalletId) {
           return { ...wallet, balance: wallet.balance - amount };
@@ -270,7 +248,6 @@ const Wallets = () => {
     }
   };
 
-  // Open the edit wallet form
   const openEditWalletForm = (id: string) => {
     const walletToEdit = wallets.find((wallet) => wallet.id === id);
     if (walletToEdit) {
@@ -337,7 +314,6 @@ const Wallets = () => {
         </>
       )}
 
-      {/* Wallet Form Modal */}
       <WalletForm
         isOpen={isFormOpen}
         onClose={() => {
@@ -349,7 +325,6 @@ const Wallets = () => {
         isEditing={!!editingWallet}
       />
 
-      {/* Transfer Funds Modal */}
       <TransferFundsForm
         isOpen={isTransferOpen}
         onClose={() => setIsTransferOpen(false)}
