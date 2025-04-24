@@ -7,32 +7,37 @@ interface AuthLayoutProps {
   title: string;
   subtitle: string;
 }
-const AuthLayout = ({
-  children,
-  title,
-  subtitle,
-}: AuthLayoutProps) => {
+
+const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
   const isMobile = useIsMobile();
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-fuchsia-100 via-purple-50 to-blue-50 p-2 relative overflow-hidden">
-      <div className="absolute left-0 top-0 h-[30vh] w-full bg-gradient-to-r from-[#ffdae6]/40 via-violet-200/50 to-sky-100/60 rounded-b-3xl blur-2xl pointer-events-none" />
-      <main
-        className={`relative z-20 w-full flex flex-col items-center mt-8 sm:mt-0 ${
-          isMobile ? "max-w-[98%]" : "max-w-md"
-        }`}
-      >
-        <section className="bg-white/90 border border-fuchsia-100 shadow-[0_10px_40px_-10px_rgba(130,0,255,0.08)] rounded-3xl p-7 sm:p-10 backdrop-blur-2xl animate-fade-in glassmorphism">
-          <div className="text-center mb-6 px-4">
-            <h1 className="text-4xl font-black text-fuchsia-700 bg-gradient-to-r from-fuchsia-600 to-purple-800 bg-clip-text text-transparent tracking-tight drop-shadow">
-              {title}
-            </h1>
-            <p className="text-base mt-3 text-fuchsia-700/80">{subtitle}</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      {/* Decorative elements */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br from-fuchsia-100 to-violet-200 blur-3xl opacity-70" />
+        <div className="absolute top-1/2 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-blue-100 to-purple-200 blur-3xl opacity-70" />
+      </div>
+
+      <div className="relative min-h-screen flex items-center justify-center p-4">
+        <div className={`w-full ${isMobile ? "max-w-[95%]" : "max-w-md"}`}>
+          {/* Glass Card */}
+          <div className="relative bg-white/80 backdrop-blur-xl shadow-xl rounded-2xl border border-white/20 p-8 overflow-hidden">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-600 to-purple-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <p className="mt-2 text-gray-600">{subtitle}</p>
+            </div>
+
+            {/* Content */}
+            {children}
           </div>
-          {children}
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
   );
 };
-export default AuthLayout;
 
+export default AuthLayout;

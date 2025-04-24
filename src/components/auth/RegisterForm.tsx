@@ -1,16 +1,16 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Mail, User, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const RegisterForm = () => {
@@ -36,15 +36,11 @@ const RegisterForm = () => {
       window.dispatchEvent(
         new CustomEvent("wwAppNotification", {
           detail: {
-            title: "Sign up successful",
-            description: "Welcome to Wallet Watch!",
+            title: "Welcome to Wallet Watch!",
+            description: "Your account has been created successfully.",
           },
         })
       );
-      toast({
-        title: "Account created successfully",
-        description: "Welcome to WalletWatch!",
-      });
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -65,93 +61,111 @@ const RegisterForm = () => {
   };
 
   return (
-    <AuthLayout title="Sign Up to Wallet Watch" subtitle="Create your account and manage your finances, Indian style. 🇮🇳">
-      <div className="space-y-8">
+    <AuthLayout
+      title="Create Account 🚀"
+      subtitle="Join us to manage your finances better"
+    >
+      <div className="space-y-6">
         {authError && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-fade-in">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{authError}</AlertDescription>
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
-              <Input
-                id="firstName"
-                placeholder="Arjun"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                disabled={isLoading}
-                required
-                className="bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
-                autoComplete="given-name"
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Input
+                  id="firstName"
+                  placeholder="John"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoading}
+                  required
+                  autoComplete="given-name"
+                />
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                id="lastName"
-                placeholder="Patel"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                disabled={isLoading}
-                className="bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
-                autoComplete="family-name"
-              />
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Input
+                  id="lastName"
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoading}
+                  autoComplete="family-name"
+                />
+              </div>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-              className="bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
-              autoComplete="email"
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                disabled={isLoading}
+                required
+                autoComplete="email"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
+              <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pl-10"
                 disabled={isLoading}
                 required
                 minLength={6}
-                className="w-full pr-10 bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                tabIndex={-1}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
               </button>
             </div>
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-700 hover:to-violet-700 text-white shadow-purple-200 shadow transition-all duration-200"
+            className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <LoadingSpinner size="sm" className="mr-2" /> Creating account...
+                <LoadingSpinner size="sm" className="mr-2" />
+                Creating account...
               </>
             ) : (
               "Create account"
@@ -160,35 +174,34 @@ const RegisterForm = () => {
         </form>
 
         <div className="relative">
-          <Separator className="my-4" />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="bg-white/70 px-4 text-xs text-fuchsia-500 font-semibold shadow rounded-full">
-              OR CONTINUE WITH
-            </span>
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
           </div>
         </div>
 
         <Button
           type="button"
           variant="outline"
-          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200"
+          className="w-full"
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
-          <FcGoogle className="mr-2 h-5 w-5" /> Sign up with Google
+          <FcGoogle className="mr-2 h-5 w-5" />
+          Sign up with Google
         </Button>
 
-        <div
-          className={`text-center text-base mt-8 ${isMobile ? "pb-4" : ""}`}
-        >
+        <p className="text-center text-sm text-gray-600">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline"
+            className="font-semibold text-fuchsia-600 hover:text-fuchsia-700 hover:underline"
           >
             Sign in
           </Link>
-        </div>
+        </p>
       </div>
     </AuthLayout>
   );

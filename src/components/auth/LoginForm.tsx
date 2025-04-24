@@ -4,19 +4,19 @@ import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mail, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -31,12 +31,11 @@ const LoginForm = () => {
 
     try {
       await signIn(email, password);
-      // Raise an event for in-app notifications
       window.dispatchEvent(
         new CustomEvent("wwAppNotification", {
           detail: {
-            title: "Sign-in successful",
-            description: "Welcome back to Wallet Watch.",
+            title: "Welcome back!",
+            description: "Successfully signed in to your account.",
           },
         })
       );
@@ -61,31 +60,34 @@ const LoginForm = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back! 🔐"
-      subtitle="Sign in to access your Indian wallet universe."
+      title="Welcome Back! 👋"
+      subtitle="Login to access your financial dashboard"
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {authError && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="animate-fade-in">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{authError}</AlertDescription>
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2 relative">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              required
-              className="w-full bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
-              autoComplete="email"
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10"
+                disabled={isLoading}
+                required
+                autoComplete="email"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -93,32 +95,47 @@ const LoginForm = () => {
               <Label htmlFor="password">Password</Label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-semibold text-fuchsia-600 hover:text-fuchsia-800 hover:underline"
+                className="text-sm text-fuchsia-600 hover:text-fuchsia-700 hover:underline"
               >
                 Forgot password?
               </Link>
             </div>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              required
-              className="w-full bg-fuchsia-50/70 border-fuchsia-200 focus-visible:ring-fuchsia-500"
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pl-10"
+                disabled={isLoading}
+                required
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-fuchsia-600 to-violet-600 hover:from-fuchsia-700 hover:to-violet-700 text-white shadow-purple-200 shadow transition-all duration-200"
+            className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <LoadingSpinner size="sm" className="mr-2" /> Signing in...
+                <LoadingSpinner size="sm" className="mr-2" />
+                Signing in...
               </>
             ) : (
               "Sign in"
@@ -127,35 +144,34 @@ const LoginForm = () => {
         </form>
 
         <div className="relative">
-          <Separator className="my-4" />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="bg-white/70 px-4 text-xs text-fuchsia-500 font-semibold shadow rounded-full">
-              OR CONTINUE WITH
-            </span>
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-gray-300" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
           </div>
         </div>
 
         <Button
           type="button"
           variant="outline"
-          className="w-full border-fuchsia-200 hover:bg-fuchsia-50 bg-white/80 transition-all duration-200"
+          className="w-full"
           onClick={handleGoogleSignIn}
           disabled={isLoading}
         >
-          <FcGoogle className="mr-2 h-5 w-5" /> Sign in with Google
+          <FcGoogle className="mr-2 h-5 w-5" />
+          Sign in with Google
         </Button>
 
-        <div
-          className={`text-center text-base mt-8 ${isMobile ? "pb-3" : ""}`}
-        >
-          Need an account?{" "}
+        <p className="text-center text-sm text-gray-600">
+          Don't have an account?{" "}
           <Link
             to="/register"
-            className="text-fuchsia-700 font-semibold hover:text-fuchsia-900 hover:underline"
+            className="font-semibold text-fuchsia-600 hover:text-fuchsia-700 hover:underline"
           >
-            Register now
+            Sign up
           </Link>
-        </div>
+        </p>
       </div>
     </AuthLayout>
   );
