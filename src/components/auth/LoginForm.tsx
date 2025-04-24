@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Mail, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,14 +26,78 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle } = useAuth();
   const isMobile = useIsMobile();
+  
+  // Login attempt tracking
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
+  
+  useEffect(() => {
+    // Load login attempts from localStorage on component mount
+    const storedAttempts = localStorage.getItem('loginAttempts');
+    const storedLockout = localStorage.getItem('lockoutUntil');
+    
+    if (storedAttempts) {
+      setLoginAttempts(parseInt(storedAttempts));
+    }
+    
+    if (storedLockout) {
+      const lockoutTime = parseInt(storedLockout);
+      if (lockoutTime > Date.now()) {
+        setLockoutUntil(lockoutTime);
+      } else {
+        // Lockout period has expired, reset attempts
+        localStorage.removeItem('loginAttempts');
+        localStorage.removeItem('lockoutUntil');
+      }
+    }
+  }, []);
+  
+  // Update time remaining in lockout
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      if (lockoutUntil <= now) {
+        // Lockout period has expired
+        setLockoutUntil(null);
+        setLoginAttempts(0);
+        localStorage.removeItem('loginAttempts');
+        localStorage.removeItem('lockoutUntil');
+        setTimeRemaining("");
+      } else {
+        // Calculate and format time remaining
+        const diff = lockoutUntil - now;
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeRemaining(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
+    }, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, [lockoutUntil]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if account is locked out
+    if (lockoutUntil && lockoutUntil > Date.now()) {
+      setAuthError(`Account temporarily locked. Try again in ${timeRemaining}`);
+      return;
+    }
+    
     setIsLoading(true);
     setAuthError(null);
 
     try {
       await signIn(email, password);
+      
+      // Reset login attempts on successful login
+      setLoginAttempts(0);
+      localStorage.removeItem('loginAttempts');
+      localStorage.removeItem('lockoutUntil');
+      
       window.dispatchEvent(
         new CustomEvent("wwAppNotification", {
           detail: {
@@ -42,7 +109,21 @@ const LoginForm = () => {
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Login error:", error);
-      setAuthError(error.message || "Failed to sign in");
+      
+      // Increment failed login attempts
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      localStorage.setItem('loginAttempts', newAttempts.toString());
+      
+      // Check if max attempts reached
+      if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+        const lockTime = Date.now() + LOCKOUT_TIME;
+        setLockoutUntil(lockTime);
+        localStorage.setItem('lockoutUntil', lockTime.toString());
+        setAuthError(`Too many failed attempts. Account locked for 15 minutes.`);
+      } else {
+        setAuthError(`${error.message || "Failed to sign in"} (Attempt ${newAttempts}/${MAX_LOGIN_ATTEMPTS})`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +164,7 @@ const LoginForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
-                disabled={isLoading}
+                disabled={isLoading || (lockoutUntil !== null && lockoutUntil > Date.now())}
                 required
                 autoComplete="email"
               />
@@ -109,7 +190,7 @@ const LoginForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="pl-10"
-                disabled={isLoading}
+                disabled={isLoading || (lockoutUntil !== null && lockoutUntil > Date.now())}
                 required
                 autoComplete="current-password"
               />
@@ -117,6 +198,7 @@ const LoginForm = () => {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5" />
@@ -130,13 +212,15 @@ const LoginForm = () => {
           <Button
             type="submit"
             className="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-700 hover:to-purple-700"
-            disabled={isLoading}
+            disabled={isLoading || (lockoutUntil !== null && lockoutUntil > Date.now())}
           >
             {isLoading ? (
               <>
                 <LoadingSpinner size="sm" className="mr-2" />
                 Signing in...
               </>
+            ) : lockoutUntil && lockoutUntil > Date.now() ? (
+              `Try again in ${timeRemaining}`
             ) : (
               "Sign in"
             )}

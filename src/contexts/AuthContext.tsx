@@ -10,8 +10,10 @@ interface AuthContextProps {
   signIn: (email: string, password: string) => Promise<any>;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<any>;
   signInWithGoogle: () => Promise<any>;
-  resetPassword: (email: string) => Promise<any>; // Added resetPassword method
+  resetPassword: (email: string) => Promise<any>;
+  updatePassword: (newPassword: string) => Promise<any>;
   signOut: () => Promise<any>;
+  refreshSession: () => Promise<any>; // Added method to manually refresh session
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -21,16 +23,36 @@ const AuthContext = createContext<AuthContextProps>({
   signIn: async () => {},
   signUp: async () => {},
   signInWithGoogle: async () => {},
-  resetPassword: async () => {}, // Added resetPassword method
+  resetPassword: async () => {}, 
+  updatePassword: async () => {}, // Added update password method
   signOut: async () => {},
+  refreshSession: async () => {}, // Added refresh session method
 });
 
 export const useAuth = () => useContext(AuthContext);
+
+// Session timeout duration in milliseconds - 30 minutes
+const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastActivity, setLastActivity] = useState<number>(Date.now());
+  
+  // Function to check if session is expired based on user activity
+  const checkSessionTimeout = () => {
+    const currentTime = Date.now();
+    if (session && (currentTime - lastActivity > SESSION_TIMEOUT)) {
+      console.log("Session expired due to inactivity");
+      signOut();
+    }
+  };
+  
+  // Update last activity timestamp on user interactions
+  const updateActivity = () => {
+    setLastActivity(Date.now());
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -38,6 +60,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Reset activity timer when auth state changes
+        if (session) {
+          setLastActivity(Date.now());
+        }
       }
     );
 
@@ -47,20 +74,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       setIsLoading(false);
     });
-
+    
+    // Set up activity tracking for session timeout
+    if (typeof window !== 'undefined') {
+      // Add event listeners for user activity
+      window.addEventListener('mousemove', updateActivity);
+      window.addEventListener('keydown', updateActivity);
+      window.addEventListener('click', updateActivity);
+      window.addEventListener('touchstart', updateActivity);
+      
+      // Check session timeout periodically (every minute)
+      const intervalId = setInterval(checkSessionTimeout, 60000);
+      
+      return () => {
+        // Clean up event listeners and interval
+        window.removeEventListener('mousemove', updateActivity);
+        window.removeEventListener('keydown', updateActivity);
+        window.removeEventListener('click', updateActivity);
+        window.removeEventListener('touchstart', updateActivity);
+        clearInterval(intervalId);
+        subscription.unsubscribe();
+      };
+    }
+    
     return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
       
-      return { success: true };
+      // Set last activity when user signs in
+      setLastActivity(Date.now());
+      
+      return { success: true, data };
     } catch (error: any) {
       console.error("Error signing in:", error);
       throw error;
@@ -97,6 +149,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (profileError) throw profileError;
       }
       
+      // Set last activity when user signs up
+      setLastActivity(Date.now());
+      
       return data;
     } catch (error: any) {
       console.error("Error signing up:", error);
@@ -122,7 +177,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Add the resetPassword method implementation
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -134,6 +188,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: true };
     } catch (error: any) {
       console.error("Error resetting password:", error);
+      throw error;
+    }
+  };
+  
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
+      
+      if (error) throw error;
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error updating password:", error);
+      throw error;
+    }
+  };
+  
+  const refreshSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (error) throw error;
+      
+      // Update the session state with the refreshed session
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      
+      // Reset activity timer
+      setLastActivity(Date.now());
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error refreshing session:", error);
       throw error;
     }
   };
@@ -156,8 +244,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signIn,
     signUp,
     signInWithGoogle,
-    resetPassword, // Added resetPassword method
+    resetPassword,
+    updatePassword,
     signOut,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

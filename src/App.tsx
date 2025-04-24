@@ -20,6 +20,7 @@ import Analysis from "@/pages/Analysis";
 import Settings from "@/pages/Settings";
 import ErrorPage from "@/pages/ErrorPage";
 import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 
 const ProtectedRoute = () => {

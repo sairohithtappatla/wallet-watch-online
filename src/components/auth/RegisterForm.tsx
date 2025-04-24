@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import AuthLayout from "./AuthLayout";
 import { FcGoogle } from "react-icons/fc";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Mail, User, KeyRound, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, Mail, User, KeyRound, Eye, EyeOff, Shield } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const RegisterForm = () => {
@@ -26,8 +26,43 @@ const RegisterForm = () => {
   const { signUp, signInWithGoogle } = useAuth();
   const isMobile = useIsMobile();
 
+  // Password validation
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  });
+  
+  const [passwordScore, setPasswordScore] = useState(0);
+  
+  useEffect(() => {
+    // Validate password as user types
+    const strength = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    };
+    
+    setPasswordStrength(strength);
+    
+    // Calculate score (0-5)
+    const score = Object.values(strength).filter(Boolean).length;
+    setPasswordScore(score);
+  }, [password]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check password strength
+    if (passwordScore < 4) {
+      setAuthError("Please create a stronger password that meets at least 4 requirements");
+      return;
+    }
+    
     setIsLoading(true);
     setAuthError(null);
 
@@ -128,7 +163,22 @@ const RegisterForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="flex items-center justify-between">
+              <span>Password</span>
+              <span className="text-xs flex items-center">
+                <Shield className="h-3 w-3 mr-1" />
+                Strength: 
+                <span className={`ml-1 font-medium ${
+                  passwordScore < 2 ? 'text-red-500' : 
+                  passwordScore < 4 ? 'text-yellow-500' : 
+                  'text-green-500'
+                }`}>
+                  {passwordScore < 2 ? 'Weak' : 
+                   passwordScore < 4 ? 'Medium' : 
+                   'Strong'}
+                </span>
+              </span>
+            </Label>
             <div className="relative">
               <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               <Input
@@ -140,13 +190,14 @@ const RegisterForm = () => {
                 className="pl-10"
                 disabled={isLoading}
                 required
-                minLength={6}
+                minLength={8}
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5" />
@@ -154,6 +205,25 @@ const RegisterForm = () => {
                   <Eye className="h-5 w-5" />
                 )}
               </button>
+            </div>
+            
+            {/* Password strength indicators */}
+            <div className="mt-2 space-y-1 text-xs">
+              <p className={`flex items-center ${passwordStrength.length ? 'text-green-500' : 'text-gray-500'}`}>
+                {passwordStrength.length ? '✓' : '○'} At least 8 characters
+              </p>
+              <p className={`flex items-center ${passwordStrength.uppercase ? 'text-green-500' : 'text-gray-500'}`}>
+                {passwordStrength.uppercase ? '✓' : '○'} At least one uppercase letter (A-Z)
+              </p>
+              <p className={`flex items-center ${passwordStrength.lowercase ? 'text-green-500' : 'text-gray-500'}`}>
+                {passwordStrength.lowercase ? '✓' : '○'} At least one lowercase letter (a-z)
+              </p>
+              <p className={`flex items-center ${passwordStrength.number ? 'text-green-500' : 'text-gray-500'}`}>
+                {passwordStrength.number ? '✓' : '○'} At least one number (0-9)
+              </p>
+              <p className={`flex items-center ${passwordStrength.special ? 'text-green-500' : 'text-gray-500'}`}>
+                {passwordStrength.special ? '✓' : '○'} At least one special character (!@#$%^&*)
+              </p>
             </div>
           </div>
 
