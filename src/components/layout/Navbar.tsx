@@ -17,63 +17,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
-
-type NotificationType = {
-  id: string;
-  title: string;
-  description: string;
-  createdAt: string;
-  type?: string;
-};
-
-const generateNotifId = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-const getStoredNotifications = (): NotificationType[] => {
-  try {
-    const stored = localStorage.getItem("WW_Notifications");
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-const useNotifications = () => {
-  const [notifications, setNotifications] = useState<NotificationType[]>(getStoredNotifications());
-
-  // Save to localStorage whenever notifications change
-  useEffect(() => {
-    localStorage.setItem("WW_Notifications", JSON.stringify(notifications));
-  }, [notifications]);
-
-  // Add a notification only if it doesn't exist (by id)
-  const addNotification = (notif: Omit<NotificationType, "id" | "createdAt"> & Partial<NotificationType>) => {
-    setNotifications(prev => {
-      // Prevent duplicate by checking title+description+type
-      const exists = prev.some(
-        n => n.title === notif.title &&
-             n.description === notif.description &&
-            (n.type || "") === (notif.type || "")
-      );
-      if (exists) return prev;
-      return [
-        {
-          id: generateNotifId(),
-          title: notif.title,
-          description: notif.description,
-          createdAt: new Date().toISOString(),
-          type: notif.type,
-        },
-        ...prev,
-      ];
-    });
-  };
-
-  const clearAllNotifications = () => setNotifications([]);
-  const clearNotification = (id: string) =>
-    setNotifications(notifications => notifications.filter(n => n.id !== id));
-
-  return { notifications, addNotification, clearAllNotifications, clearNotification };
-};
+import { 
+  NotificationType, 
+  getStoredNotifications, 
+  clearStoredNotifications, 
+  clearNotification, 
+  addNotification 
+} from "@/lib/utils";
 
 interface NavbarProps {
   userName: string;
@@ -85,35 +35,87 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { toast } = useToast();
-  const { notifications, addNotification, clearAllNotifications, clearNotification } = useNotifications();
+  const [notifications, setNotifications] = useState<NotificationType[]>(getStoredNotifications());
+
+  // Sync notifications with localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setNotifications(getStoredNotifications());
+    };
+    
+    // Update notifications on mount
+    setNotifications(getStoredNotifications());
+    
+    // Update notifications when localStorage changes in another tab
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event for notification updates
+    window.addEventListener('notifications-updated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('notifications-updated', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     // Handler for generic app notifications (like daily/weekly spending from dashboard)
     const handleAppNotification = (event: any) => {
       if (event.detail && event.detail.title) {
-        addNotification({
+        const notificationData = {
           title: event.detail.title,
           description: event.detail.description,
-        });
+          type: event.detail.type || 'info',
+        };
+        
+        addNotification(notificationData);
+        setNotifications(getStoredNotifications());
+        
+        // Trigger event for other components
+        window.dispatchEvent(new Event('notifications-updated'));
       }
     };
+    
     // Handler for high expense etc (from transactions)
     const handleExpenseAlert = (event: any) => {
       if (event.detail && event.detail.message) {
-        addNotification({
+        const notificationData = {
           title: "Expense Alert",
           description: event.detail.message,
           type: 'alert',
-        });
+        };
+        
+        addNotification(notificationData);
+        setNotifications(getStoredNotifications());
+        
+        // Trigger event for other components
+        window.dispatchEvent(new Event('notifications-updated'));
       }
     };
+    
     window.addEventListener("wwAppNotification", handleAppNotification);
     window.addEventListener("expense-alert", handleExpenseAlert);
+    
     return () => {
       window.removeEventListener("wwAppNotification", handleAppNotification);
       window.removeEventListener("expense-alert", handleExpenseAlert);
     };
-  }, [addNotification]);
+  }, []);
+
+  const handleClearAllNotifications = () => {
+    clearStoredNotifications();
+    setNotifications([]);
+    toast({
+      title: "Notifications cleared",
+      description: "All notifications have been cleared",
+    });
+  };
+
+  const handleClearNotification = (id: string) => {
+    clearNotification(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    window.dispatchEvent(new Event('notifications-updated'));
+  };
 
   const handleLogout = async () => {
     try {
@@ -144,9 +146,7 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
             className="shrink-0 md:hidden"
           >
             <span className="sr-only">Toggle navigation menu</span>
-            <span>
-              <svg width={20} height={20} fill="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
-            </span>
+            <svg width={20} height={20} fill="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-52 sm:w-72">
@@ -178,7 +178,7 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
                 <span className="font-semibold text-base sm:text-lg">Notifications</span>
                 {notifications.length > 0 && (
                   <button
-                    onClick={clearAllNotifications}
+                    onClick={handleClearAllNotifications}
                     className="text-xs text-purple-600 hover:underline ml-auto"
                   >
                     Clear all
@@ -215,7 +215,7 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
                       <button
                         className="rounded p-1 text-gray-400 hover:text-red-600 absolute top-2 right-2"
                         aria-label="Clear notification"
-                        onClick={() => clearNotification(notif.id)}
+                        onClick={() => handleClearNotification(notif.id)}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -225,6 +225,7 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
