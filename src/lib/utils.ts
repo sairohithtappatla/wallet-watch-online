@@ -5,14 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const formatCurrency = (amount: number, currency: string = "INR") => {
-  // Always use Indian numbering and the ₹ symbol
+export function formatCurrency(amount: number, currency: string = "INR") {
   return `₹${Number(amount)
     .toLocaleString("en-IN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
-};
+}
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -53,4 +52,40 @@ export function groupExpensesByDate(expenses: any[]): Record<string, any[]> {
   });
   
   return grouped;
+}
+
+export function getStoredNotifications(): NotificationType[] {
+  try {
+    return JSON.parse(localStorage.getItem("WW_Notifications") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function clearStoredNotifications(): void {
+  localStorage.setItem("WW_Notifications", "[]");
+}
+
+export function clearNotification(id: string): void {
+  const notifications = getStoredNotifications();
+  const filtered = notifications.filter(n => n.id !== id);
+  localStorage.setItem("WW_Notifications", JSON.stringify(filtered));
+}
+
+export function addNotification(notification: { title: string; description: string; type?: string }): void {
+  const notifications = getStoredNotifications();
+  const exists = notifications.some(
+    n => n.title === notification.title && 
+         n.description === notification.description && 
+         n.type === notification.type
+  );
+  
+  if (!exists) {
+    const newNotification = {
+      ...notification,
+      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem("WW_Notifications", JSON.stringify([newNotification, ...notifications]));
+  }
 }

@@ -1,0 +1,11 @@
+
+{
+  "appId": "app.lovable.ee0e4fdcbe3d4a91817f81cb0fd9618a",
+  "appName": "wallet-watch-online",
+  "webDir": "dist",
+  "server": {
+    "url": "https://ee0e4fdc-be3d-4a91-817f-81cb0fd9618a.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  },
+  "bundledWebRuntime": false
+}
