@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/analysis/StatCard";
 import SpendingChart from "@/components/analysis/SpendingChart";
+import SpendingCalendar from "@/components/analysis/SpendingCalendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -188,6 +188,11 @@ const Analysis = () => {
           icon={<Wallet />}
           description="Percentage of income saved"
         />
+      </div>
+
+      {/* Calendar View for Daily/Weekly/Monthly Spending */}
+      <div className="mb-6">
+        <SpendingCalendar expenses={expenses} />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 mb-6">

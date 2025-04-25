@@ -4,20 +4,50 @@ import { Button } from "@/components/ui/button";
 import ExpenseCard, { ExpenseProps, ExpenseType } from "@/components/expense/ExpenseCard";
 import ExpenseForm, { ExpenseFormData } from "@/components/expense/ExpenseForm";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Filter, Loader2 } from "lucide-react";
+import { Plus, Filter, Loader2, X, Calendar, Search } from "lucide-react";
 import { generateId, groupExpensesByDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/ui/loading-spinner";
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 const Expenses = () => {
   const [expenses, setExpenses] = useState<ExpenseProps[]>([]);
+  const [filteredExpenses, setFilteredExpenses] = useState<ExpenseProps[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<ExpenseFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedWallet, setSelectedWallet] = useState<string>("");
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [dateRange, setDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenExpenseForm = () => {
@@ -72,6 +102,7 @@ const Expenses = () => {
           onDelete: () => {},
         })) || [];
         setExpenses(formattedExpenses);
+        setFilteredExpenses(formattedExpenses);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast({
@@ -86,8 +117,66 @@ const Expenses = () => {
     fetchData();
   }, [user, toast]);
 
-  const groupedExpenses = groupExpensesByDate(expenses);
+  useEffect(() => {
+    let result = [...expenses];
+    
+    if (searchTerm) {
+      result = result.filter(
+        expense => 
+          expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          expense.walletName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (selectedCategory) {
+      result = result.filter(expense => expense.category === selectedCategory);
+    }
+    
+    if (selectedWallet) {
+      result = result.filter(expense => expense.walletId === selectedWallet);
+    }
+    
+    if (selectedType) {
+      result = result.filter(expense => expense.type === selectedType);
+    }
+    
+    if (dateRange.from) {
+      const fromDate = new Date(dateRange.from);
+      fromDate.setHours(0, 0, 0, 0);
+      
+      result = result.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate >= fromDate;
+      });
+    }
+    
+    if (dateRange.to) {
+      const toDate = new Date(dateRange.to);
+      toDate.setHours(23, 59, 59, 999);
+      
+      result = result.filter(expense => {
+        const expenseDate = new Date(expense.date);
+        return expenseDate <= toDate;
+      });
+    }
+    
+    setFilteredExpenses(result);
+  }, [expenses, searchTerm, selectedCategory, selectedWallet, selectedType, dateRange]);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("");
+    setSelectedWallet("");
+    setSelectedType("");
+    setDateRange({ from: undefined, to: undefined });
+    setFilteredExpenses(expenses);
+  };
+
+  const groupedExpenses = groupExpensesByDate(filteredExpenses);
   const sortedDates = Object.keys(groupedExpenses).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  const categories = Array.from(new Set(expenses.map(expense => expense.category)));
 
   const handleAddExpense = async (expenseData: ExpenseFormData) => {
     if (!user) return;
@@ -377,13 +466,131 @@ const Expenses = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-          >
-            <Filter className="h-4 w-4" /> Filter
-          </Button>
+          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+              >
+                <Filter className="h-4 w-4" /> Filter
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+              <div className="space-y-4">
+                <h4 className="font-medium">Filter Transactions</h4>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="search">Search</Label>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search transactions..."
+                      className="pl-8"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger id="category">
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Categories</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="wallet">Wallet</Label>
+                  <Select value={selectedWallet} onValueChange={setSelectedWallet}>
+                    <SelectTrigger id="wallet">
+                      <SelectValue placeholder="All Wallets" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Wallets</SelectItem>
+                      {wallets.map((wallet) => (
+                        <SelectItem key={wallet.id} value={wallet.id}>
+                          {wallet.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Types</SelectItem>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Date Range</Label>
+                  <div className="grid gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="justify-start text-left font-normal"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {dateRange.from ? (
+                            dateRange.to ? (
+                              <>
+                                {format(dateRange.from, "LLL dd, y")} -{" "}
+                                {format(dateRange.to, "LLL dd, y")}
+                              </>
+                            ) : (
+                              format(dateRange.from, "LLL dd, y")
+                            )
+                          ) : (
+                            <span>Pick a date range</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          initialFocus
+                          mode="range"
+                          defaultMonth={dateRange.from}
+                          selected={dateRange}
+                          onSelect={setDateRange}
+                          numberOfMonths={1}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between pt-2">
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Reset Filters
+                  </Button>
+                  <Button size="sm" onClick={() => setIsFilterOpen(false)}>
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Button 
             onClick={() => setIsFormOpen(true)} 
             className="gap-1 ml-auto sm:ml-0"
@@ -415,7 +622,9 @@ const Expenses = () => {
       ) : (
         <div className="text-center py-12">
           <p className="text-muted-foreground">
-            You don't have any transactions yet. Add your first one!
+            {expenses.length > 0 
+              ? "No transactions match your filters. Try adjusting your filter criteria."
+              : "You don't have any transactions yet. Add your first one!"}
           </p>
           <Button onClick={() => setIsFormOpen(true)} className="mt-4">
             <Plus className="mr-2 h-4 w-4" /> Add Transaction

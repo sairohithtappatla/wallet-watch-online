@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -159,7 +158,12 @@ const Navbar = ({ userName, isLoading = false, avatarUrl }: NavbarProps) => {
             Wallet Watch
           </div>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-4">
+        <Link to="/dashboard" className="md:hidden absolute left-1/2 transform -translate-x-1/2">
+          <div className="font-bold text-xl transition-colors" style={{ color: "#9b87f5" }}>
+            Wallet Watch
+          </div>
+        </Link>
+        <div className="flex items-center gap-2 sm:gap-4 ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full relative">
