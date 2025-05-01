@@ -23,10 +23,10 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    // Optimize the build for different targets based on environment variables
     target: 'es2015',
-    // Handle PWA and mobile compatibility
     assetsInlineLimit: 4096,
     chunkSizeWarningLimit: 2000,
   },
+  // Ensure environment variables starting with VITE_ are available
+  envPrefix: ['VITE_'],
 }));

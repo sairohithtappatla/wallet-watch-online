@@ -19,12 +19,28 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies
 npm i
 
-# Step 4: Update the browserslist database
+# Step 4: Set up environment variables
+cp .env.example .env.local
+
+# Step 5: Update the browserslist database
 npx update-browserslist-db@latest
 
-# Step 5: Start the development server
+# Step 6: Start the development server
 npm run dev
 ```
+
+### Environment Variables
+
+The project uses environment variables for configuration. A sample `.env.example` file is provided. Copy this to `.env.local` for local development:
+
+```sh
+cp .env.example .env.local
+```
+
+The following environment variables are required:
+
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
 
 ## How to build for mobile platforms
 
@@ -126,3 +142,14 @@ Yes it is!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Troubleshooting
+
+### API Key Issues
+
+If you encounter issues with API keys when running locally:
+
+1. Make sure you've copied the `.env.example` file to `.env.local`
+2. Verify that the Supabase URL and anon key are correct in your `.env.local` file
+3. Check the browser console for any error messages related to Supabase connectivity
+4. Try clearing your browser cache and localStorage if you've previously used different API keys
