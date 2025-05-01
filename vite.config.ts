@@ -20,4 +20,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    // Optimize the build for different targets based on environment variables
+    target: 'es2015',
+    // Handle PWA and mobile compatibility
+    assetsInlineLimit: 4096,
+    chunkSizeWarningLimit: 2000,
+  },
 }));

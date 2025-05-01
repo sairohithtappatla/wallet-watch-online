@@ -1,0 +1,21 @@
+
+{
+  "name": "Wallet Watch Online",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "description": "Track your finances and expenses with this wallet management application",
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "icon-192.png",
+      "48": "icon-192.png",
+      "128": "icon-512.png"
+    }
+  },
+  "icons": {
+    "16": "icon-192.png",
+    "48": "icon-192.png",
+    "128": "icon-512.png"
+  },
+  "permissions": ["storage"]
+}

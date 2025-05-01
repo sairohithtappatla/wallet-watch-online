@@ -16,3 +16,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// For debugging API key issues
+console.log("Supabase client initialized with URL:", SUPABASE_URL);

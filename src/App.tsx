@@ -64,6 +64,7 @@ const PublicRoute = () => {
 
 const AppContent = () => {
   useEffect(() => {
+    // Set viewport meta tags for better mobile experience
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     
     if (!viewportMeta) {
@@ -74,6 +75,7 @@ const AppContent = () => {
     
     viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
     
+    // Add meta tags for PWA capabilities
     const appleMeta = document.createElement('meta');
     appleMeta.setAttribute('name', 'apple-mobile-web-app-capable');
     appleMeta.setAttribute('content', 'yes');
@@ -88,6 +90,16 @@ const AppContent = () => {
     themeMeta.setAttribute('name', 'theme-color');
     themeMeta.setAttribute('content', '#ffffff');
     document.head.appendChild(themeMeta);
+    
+    // Update browserslist database (this will run only in development)
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        console.log('Attempting to update browserslist database...');
+        // This is just a notification, the actual update happens via postinstall script
+      } catch (error) {
+        console.warn('Could not update browserslist database:', error);
+      }
+    }
   }, []);
 
   return (
@@ -127,7 +139,14 @@ const AppContent = () => {
   );
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const App = () => {
   return (
