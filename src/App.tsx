@@ -19,7 +19,7 @@ import Transactions from "@/pages/Transactions";
 import Analysis from "@/pages/Analysis";
 import Settings from "@/pages/Settings";
 import ErrorPage from "@/pages/ErrorPage";
-import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
+import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
 
@@ -97,7 +97,8 @@ const AppContent = () => {
       <Route element={<PublicRoute />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
       
       <Route element={<ProtectedRoute />}>
