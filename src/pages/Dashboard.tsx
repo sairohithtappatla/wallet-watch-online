@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -14,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
+import ExpenseCalendar from "@/components/expense/ExpenseCalendar";
 
 const Dashboard = () => {
   const [wallets, setWallets] = useState<any[]>([]);
@@ -133,9 +135,9 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button variant="outline" size="sm" className="gap-1" onClick={handleTransferFunds}>
             <ArrowLeftRight className="h-4 w-4" /> Transfer
           </Button>
@@ -145,7 +147,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <StatCard
           title="Total Balance"
           value={formatCurrency(totalBalance, "INR")}
@@ -166,6 +168,10 @@ const Dashboard = () => {
           value={formatCurrency(totalIncome - totalExpense, "INR")}
           icon={<Activity />}
         />
+      </div>
+
+      <div className="mt-6">
+        <ExpenseCalendar />
       </div>
 
       <div className="grid gap-4 mt-6 lg:grid-cols-3">
