@@ -1,4 +1,5 @@
 
+
 # BuckTrack
 
 ## Project info
@@ -153,3 +154,4 @@ If you encounter issues with API keys when running locally:
 2. Verify that the Supabase URL and anon key are correct in your `.env.local` file
 3. Check the browser console for any error messages related to Supabase connectivity
 4. Try clearing your browser cache and localStorage if you've previously used different API keys
+
