@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/analysis/StatCard";
@@ -16,11 +15,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
-import { PiggyBank, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+import { HandshakeIcon, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
+import MonthlyExpenseSummary from "@/components/analysis/MonthlyExpenseSummary";
 
 const Analysis = () => {
   const { user } = useAuth();
@@ -67,7 +67,7 @@ const Analysis = () => {
         const formattedExpenses = data?.map(expense => ({
           id: expense.id,
           amount: Math.abs(Number(expense.amount)),
-          currency: expense.wallets?.currency || "USD",
+          currency: expense.wallets?.currency || "INR",
           description: expense.description || "",
           category: expense.category || "Other",
           date: new Date(expense.date).toISOString().split('T')[0],
@@ -169,18 +169,18 @@ const Analysis = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
           title="Total Income"
-          value={formatCurrency(totalIncome, "USD")}
+          value={formatCurrency(totalIncome, "INR")}
           icon={<TrendingUp className="text-green-500" />}
         />
         <StatCard
           title="Total Expenses"
-          value={formatCurrency(totalExpenses, "USD")}
+          value={formatCurrency(totalExpenses, "INR")}
           icon={<TrendingDown className="text-red-500" />}
         />
         <StatCard
           title="Total Savings"
-          value={formatCurrency(totalSavings, "USD")}
-          icon={<PiggyBank className={totalSavings >= 0 ? "text-green-500" : "text-red-500"} />}
+          value={formatCurrency(totalSavings, "INR")}
+          icon={<HandshakeIcon className={totalSavings >= 0 ? "text-green-500" : "text-red-500"} />}
         />
         <StatCard
           title="Savings Rate"
@@ -193,41 +193,12 @@ const Analysis = () => {
       <div className="grid gap-6 md:grid-cols-2 mb-6">
         <SpendingChart expenses={expenses} />
         
-        <Card className="h-[500px]">
-          <CardHeader>
-            <CardTitle className="text-lg">Monthly Trend</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[420px]">
-            <ResponsiveContainer width="100%" height="100%">
-              {monthlySummary.length > 0 ? (
-                <BarChart data={monthlySummary}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => formatCurrency(Number(value), "USD")}
-                    labelFormatter={(label) => `Month: ${label}`}
-                  />
-                  <Legend />
-                  <Bar dataKey="income" name="Income" fill="#10B981" />
-                  <Bar dataKey="expenses" name="Expenses" fill="#EF4444" />
-                  <Bar dataKey="savings" name="Savings" fill="#3B82F6" />
-                </BarChart>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <p className="text-muted-foreground">
-                    No data available. Add some transactions to see your monthly trends.
-                  </p>
-                </div>
-              )}
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <MonthlyExpenseSummary expenses={expenses} />
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-lg">Yearly Overview</CardTitle>
+          <CardTitle className="text-lg">Monthly Overview</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="income">
@@ -244,7 +215,7 @@ const Analysis = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      formatter={(value) => formatCurrency(Number(value), "INR")}
                       labelFormatter={(label) => `Month: ${label}`}
                     />
                     <Legend />
@@ -267,7 +238,7 @@ const Analysis = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      formatter={(value) => formatCurrency(Number(value), "INR")}
                       labelFormatter={(label) => `Month: ${label}`}
                     />
                     <Legend />
@@ -290,7 +261,7 @@ const Analysis = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => formatCurrency(Number(value), "USD")}
+                      formatter={(value) => formatCurrency(Number(value), "INR")}
                       labelFormatter={(label) => `Month: ${label}`}
                     />
                     <Legend />

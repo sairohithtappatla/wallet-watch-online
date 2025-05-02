@@ -1,5 +1,5 @@
 
-# Wallet Watch Online
+# BuckTrack
 
 ## Project info
 
@@ -88,7 +88,7 @@ To convert this app into a Chrome extension:
 1. Create a `manifest.json` file in the public folder:
 ```json
 {
-  "name": "Wallet Watch Online",
+  "name": "BuckTrack",
   "version": "1.0.0",
   "manifest_version": 3,
   "description": "Track your finances and expenses with this wallet management application",

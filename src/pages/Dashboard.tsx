@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,7 +7,7 @@ import WalletCard from "@/components/wallet/WalletCard";
 import ExpenseCard from "@/components/expense/ExpenseCard";
 import StatCard from "@/components/analysis/StatCard";
 import { formatCurrency, calculateTotalBalance } from "@/lib/utils";
-import { Plus, Wallet, ArrowDownUp, Activity, TrendingUp, ArrowLeftRight } from "lucide-react";
+import { Plus, HandshakeIcon, ArrowDownUp, Activity, TrendingUp, ArrowLeftRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import SpendingChart from "@/components/analysis/SpendingChart";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import ExpenseCalendar from "@/components/expense/ExpenseCalendar";
+import MonthlyExpenseSummary from "@/components/analysis/MonthlyExpenseSummary";
 
 const Dashboard = () => {
   const [wallets, setWallets] = useState<any[]>([]);
@@ -57,8 +57,7 @@ const Dashboard = () => {
             )
           `)
           .eq('user_id', user.id)
-          .order('date', { ascending: false })
-          .limit(3);
+          .order('date', { ascending: false });
         
         if (expensesError) throw expensesError;
         
@@ -151,7 +150,7 @@ const Dashboard = () => {
         <StatCard
           title="Total Balance"
           value={formatCurrency(totalBalance, "INR")}
-          icon={<Wallet />}
+          icon={<HandshakeIcon />}
         />
         <StatCard
           title="Income"
@@ -170,8 +169,17 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="mt-6">
-        <ExpenseCalendar />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <MonthlyExpenseSummary expenses={expenses} isLoading={isLoading} />
+        
+        <Card className="col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Upcoming Expenses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ExpenseCalendar />
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 mt-6 lg:grid-cols-3">
@@ -228,7 +236,7 @@ const Dashboard = () => {
           <CardContent>
             {expenses.length > 0 ? (
               <div className="space-y-2">
-                {expenses.map((expense) => (
+                {expenses.slice(0, 3).map((expense) => (
                   <ExpenseCard
                     key={expense.id}
                     {...expense}

@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => ({
     assetsInlineLimit: 4096,
     chunkSizeWarningLimit: 2000,
   },
-  // Ensure environment variables starting with VITE_ are available
+  // Ensure environment variables starting with VITE_ are available and properly loaded
   envPrefix: ['VITE_'],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(mode)
+  }
 }));
