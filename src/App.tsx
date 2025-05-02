@@ -139,31 +139,49 @@ const AppContent = () => {
   );
 };
 
+// Create a new query client with better error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       staleTime: 30000,
+      onError: (error) => {
+        console.error("Query error:", error);
+      }
     },
   },
 });
 
 const App = () => {
-  return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ErrorProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <AppContent />
-            </TooltipProvider>
-          </ErrorProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  );
+  console.log("App rendering...");
+  try {
+    return (
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <ErrorProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <AppContent />
+              </TooltipProvider>
+            </ErrorProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
+    );
+  } catch (error) {
+    console.error("Fatal error in App component:", error);
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
+        <h1 className="text-2xl font-bold text-red-500">Fatal Application Error</h1>
+        <p className="mt-2">Please refresh the page or contact support.</p>
+        <pre className="mt-4 p-4 bg-gray-100 rounded text-xs overflow-auto max-w-full">
+          {String(error)}
+        </pre>
+      </div>
+    );
+  }
 };
 
 export default App;

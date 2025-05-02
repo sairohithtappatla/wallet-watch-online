@@ -19,7 +19,7 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies
 npm i
 
-# Step 4: Set up environment variables
+# Step 4: Set up environment variables (Optional - project uses hardcoded values as fallback)
 cp .env.example .env.local
 
 # Step 5: Update the browserslist database
@@ -31,16 +31,29 @@ npm run dev
 
 ### Environment Variables
 
-The project uses environment variables for configuration. A sample `.env.example` file is provided. Copy this to `.env.local` for local development:
+The project uses environment variables for configuration but will fall back to hardcoded values if they are not set. A sample `.env.example` file is provided. Copy this to `.env.local` for local development:
 
 ```sh
 cp .env.example .env.local
 ```
 
-The following environment variables are required:
+The following environment variables are configured:
 
 - `VITE_SUPABASE_URL`: Your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+Note: If you don't modify `.env.local`, the project will use the hardcoded values provided in the example file.
+
+### Troubleshooting
+
+If you encounter an error related to React hooks, ensure:
+1. You have only one version of React in your node_modules folder
+2. Run `npm ci` instead of `npm install` to ensure exact dependency versions
+3. Clear your browser cache and local storage
+
+For API key issues:
+- The app includes hardcoded fallback keys so it should work even without `.env.local`
+- Check browser console for debugging messages related to Supabase initialization
 
 ## How to build for mobile platforms
 
@@ -142,14 +155,3 @@ Yes it is!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-## Troubleshooting
-
-### API Key Issues
-
-If you encounter issues with API keys when running locally:
-
-1. Make sure you've copied the `.env.example` file to `.env.local`
-2. Verify that the Supabase URL and anon key are correct in your `.env.local` file
-3. Check the browser console for any error messages related to Supabase connectivity
-4. Try clearing your browser cache and localStorage if you've previously used different API keys
